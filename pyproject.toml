@@ -1,0 +1,23 @@
+[project]
+name = "bluemarz"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "logging>=0.4.9.6",
+    "orjson>=3.10.7",
+    "pydantic>=2.9.2",
+    "requests>=2.32.3",
+    "typing>=3.10.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest-mock>=3.14.0",
+    "pytest>=8.3.3",
+]
