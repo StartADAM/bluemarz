@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any, Self
 from pydantic import Field, HttpUrl, model_validator
 
-from bluemarz.core.utils.model_utils import CamelCaseModel
+from bluemarz.utils.model_utils import CamelCaseModel
 
 
 class AddFileResult(CamelCaseModel):
