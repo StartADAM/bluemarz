@@ -5,8 +5,8 @@ import requests
 
 from bluemarz.core.models import SessionFile
 from bluemarz.lib.openai import models
-from bluemarz.utils.model_utils import desserialize_response as _desserialize
-from bluemarz.utils.model_utils import to_dict as _to_dict
+from bluemarz.core.utils.model_utils import desserialize_response as _desserialize
+from bluemarz.core.utils.model_utils import to_dict as _to_dict
 
 
 def _get_assistants_api_headers(openai_key: str) -> dict[str, str]:
