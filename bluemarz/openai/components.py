@@ -25,8 +25,8 @@ from bluemarz.core.models import (
     ToolSpec,
 )
 from bluemarz.core.registries import ai_agent, ai_session, assignment_executor
-from bluemarz.lib.openai import client
-from bluemarz.lib.openai.models import (
+from bluemarz.openai import client
+from bluemarz.openai.models import (
     FunctionTool,
     OpenAiAssistantSpec,
     OpenAiAssistantToolSpec,

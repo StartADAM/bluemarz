@@ -14,6 +14,7 @@ from bluemarz.core.models import (
     ToolCallResult,
     ToolSpec,
     ToolType,
+    MessageRole
 )
 
 import logging
@@ -27,6 +28,7 @@ class Assignment:
     agent: Agent
     session: Session
     executor: type[AssignmentExecutor]
+    last_tools_submitted: list[ToolSpec]
     run_id: str | None
     last_result: RunResult | None
     params: dict[str, Any]
@@ -38,6 +40,7 @@ class Assignment:
         self.session = session
         self.run_id = run_id
         self.executor = registries.get_executor(agent, session)
+        self.last_tools_submitted = []
         self.params = kwargs
 
         self._validate_assignment()
@@ -54,6 +57,7 @@ class Assignment:
         return self.session.add_file()
 
     async def run_once(self) -> RunResult:
+        self.last_tools_submitted = []
         result = self.executor.execute(
             self.agent, self.session, self.run_id, **self.params
         )
@@ -62,17 +66,38 @@ class Assignment:
 
         return result
 
-    def submit_tool_calls(self, tool_call_results: list[ToolCallResult]):
+    def submit_tool_calls(self, tool_call_results: list[ToolCallResult]) -> None:
+        self.last_tools_submitted.extend([tcr.tool_call.tool for tcr in tool_call_results])
         self.executor.submit_tool_calls(
             self.agent, self.session, self.run_id, tool_call_results, **self.params
         )
 
-    def prepare_for_async_tool_calls(self):
+    def prepare_for_async_tool_calls(self) -> None:
         self.executor.prepare_for_async_tool_calls(
             self.agent, self.session, self.run_id, **self.params
         )
 
+    def submit_async_tool_call_results(self, tool_call_results: list[ToolCallResult]) -> None:
+        for result in tool_call_results:
+            self.last_tools_submitted.append(result.tool_call.tool)
+
+            text: str = f"Tool called: {result.tool_call.tool.name} with arguments {result.tool_call.arguments}"
+
+            if result.text:
+                text += f"\nResult: {result.text}"
+
+            if result.files:
+                text += f"\nResult files: {str([file.file_name for file in result.files])[1:-1]}"
+
+            message = SessionMessage(role=MessageRole.SYSTEM, text=text)
+
+            if result.files:
+                message.files = result.files
+
+            self.add_message(message)
+
     async def run_until_breakpoint(self) -> AssignmentRunResult:
+        self.last_tools_submitted = []
         return await _run_assignment_until_breakpoint(self)
 
 
