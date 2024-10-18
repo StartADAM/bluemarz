@@ -113,6 +113,22 @@ class OpenAiAssistantNativeSession(Session):
     def delete_session(self) -> DeleteSessionResult:
         client.delete_session(self._api_key, self._impl.id)
         return DeleteSessionResult()
+    
+    def add_tool_call_result(self, tool_call_result: ToolCallResult) -> AddMessageResult:
+        text: str = f"Tool called: {tool_call_result.tool_call.tool.name} with arguments {tool_call_result.tool_call.arguments}"
+
+        if tool_call_result.text:
+            text += f"\nResult: {tool_call_result.text}"
+
+        if tool_call_result.files:
+            text += f"\nResult files: {str([file.file_name for file in tool_call_result.files])[1:-1]}"
+
+        message = SessionMessage(role=MessageRole.SYSTEM, text=text)
+
+        if tool_call_result.files:
+            message.files = tool_call_result.files
+
+        self.add_message(message)
 
 
 def _create_tool_parameters(parameter: ToolSpec.Variable) -> dict:

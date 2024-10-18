@@ -58,7 +58,6 @@ def create_run(
     thread: models.OpenAiThreadSpec,
     assistant: models.OpenAiAssistantSpec,
     additional_tools: list[models.OpenAiAssistantToolSpec],
-    files: list[SessionFile],
 ) -> models.OpenAiThreadRun:
     tools: list[models.OpenAiAssistantToolSpec] = []
     if additional_tools:

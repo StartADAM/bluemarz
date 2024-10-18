@@ -77,24 +77,10 @@ class Assignment:
             self.agent, self.session, self.run_id, **self.params
         )
 
-    def submit_async_tool_call_results(self, tool_call_results: list[ToolCallResult]) -> None:
+    def add_tool_call_results(self, tool_call_results: list[ToolCallResult]) -> None:
         for result in tool_call_results:
             self.last_tools_submitted.append(result.tool_call.tool)
-
-            text: str = f"Tool called: {result.tool_call.tool.name} with arguments {result.tool_call.arguments}"
-
-            if result.text:
-                text += f"\nResult: {result.text}"
-
-            if result.files:
-                text += f"\nResult files: {str([file.file_name for file in result.files])[1:-1]}"
-
-            message = SessionMessage(role=MessageRole.SYSTEM, text=text)
-
-            if result.files:
-                message.files = result.files
-
-            self.add_message(message)
+            self.session.add_tool_call_result(result)
 
     async def run_until_breakpoint(self) -> AssignmentRunResult:
         self.last_tools_submitted = []

@@ -34,6 +34,7 @@ class SessionSpec(CamelCaseModel):
     type: str = Field(..., min_length=1)
     messages: list["SessionMessage"] = []
     files: list["SessionFile"] = []
+    initial_tool_calls: list["ToolCall"] = []
     parameters: dict[str, Any] = {}
 
 
@@ -67,6 +68,7 @@ class ToolSpec(CamelCaseModel):
 class SessionFile(CamelCaseModel):
     id: str = None
     file_name: str
+    file_size_bytes: int
     url: HttpUrl
 
 

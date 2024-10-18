@@ -29,6 +29,9 @@ class Session(ABC):
     def delete_session(self) -> models.DeleteSessionResult:
         pass
 
+    @abstractmethod
+    def add_tool_call_result(self, tool_call_result: models.ToolCallResult) -> models.AddMessageResult:
+        pass
 
 class Tool(ABC):
     def __init__(self, spec: models.ToolSpec):
