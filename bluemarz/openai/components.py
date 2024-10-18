@@ -295,7 +295,6 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
                 session.openai_thread,
                 agent.openai_assistant,
                 [t.openai_tool for t in agent.tools],
-                session.files,
             )
         else:
             run = client.get_run(api_key, session.openai_thread.id, run_id)
