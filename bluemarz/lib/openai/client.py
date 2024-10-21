@@ -4,7 +4,7 @@ import urllib.request
 import requests
 
 from bluemarz.core.models import SessionFile
-from bluemarz.openai import models
+from bluemarz.lib.openai import models
 from bluemarz.utils.model_utils import desserialize_response as _desserialize
 from bluemarz.utils.model_utils import to_dict as _to_dict
 

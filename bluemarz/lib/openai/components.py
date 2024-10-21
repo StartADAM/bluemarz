@@ -7,7 +7,8 @@ from bluemarz.core.interfaces import (
     Agent,
     AssignmentExecutor,
     Session,
-    Tool,
+    ToolDefinition,
+    ToolImplementation,
 )
 from bluemarz.core.models import (
     AddFileResult,
@@ -25,8 +26,8 @@ from bluemarz.core.models import (
     ToolSpec,
 )
 from bluemarz.core.registries import ai_agent, ai_session, assignment_executor
-from bluemarz.openai import client
-from bluemarz.openai.models import (
+from bluemarz.lib.openai import client
+from bluemarz.lib.openai.models import (
     FunctionTool,
     OpenAiAssistantSpec,
     OpenAiAssistantToolSpec,
@@ -38,14 +39,70 @@ from bluemarz.openai.models import (
     ThreadMessageRole,
 )
 
+@ai_agent
+class OpenAiAssistant(Agent):
+    def __init__(
+        self,
+        api_key: str,
+        impl: OpenAiAssistantSpec,
+        tools: list["OpenAiAssistantTool"] = None,
+        spec: AgentSpec,
+    ):
+        self._api_key = api_key
+        self._impl = impl
+        super().__init__(spec, tools)
+
+    @classmethod
+    def _get_tool_type(cls) -> "OpenAiAssistantTool":
+        return OpenAiAssistantTool
+
+    @classmethod
+    def from_spec(cls, spec: AgentSpec) -> "OpenAiAssistant":
+        if not spec.id:
+            raise ValueError("spec must have id")
+        if not spec.id:
+            raise ValueError("spec must have api_key")
+        
+        impl = client.get_assistant(spec.api_key, spec.id)
+        if spec.tools:
+            tools = [OpenAiAssistantTool.from_spec(t) for t in spec.tools]
+        else:
+            tools = []
+
+        return cls(spec, spec.api_key, impl, tools)
+
+    @classmethod
+    def from_id(cls, api_key: str, assistant_id: str) -> "OpenAiAssistant":
+        if not api_key or not assistant_id:
+            raise ValueError("api_key and assistant_id are required")
+
+        impl: OpenAiThreadSpec = client.get_assistant(api_key, assistant_id)
+        return cls(AgentSpec(id=impl.id), api_key, impl)
+
+    @property
+    def tools(self) -> list["OpenAiAssistantTool"]:
+        return self._tools
+
+    @property
+    def api_key(self) -> str:
+        return self._api_key
+
+    @property
+    def openai_assistant(self) -> OpenAiAssistantSpec:
+        return self._impl
+
+    def add_tools(self, tools: list[ToolSpec]) -> Self:
+        self._tools.extend([OpenAiAssistantTool.from_spec(t) for t in tools])
+        return self
+
 
 @ai_session
 class OpenAiAssistantNativeSession(Session):
     def __init__(
         self,
-        spec: SessionSpec,
         api_key: str,
         impl: OpenAiThreadSpec,
+        spec: SessionSpec,
         files: list[SessionFile] = [],
     ):
         self._api_key = api_key
@@ -55,14 +112,15 @@ class OpenAiAssistantNativeSession(Session):
 
     @classmethod
     def from_spec(cls, spec: SessionSpec) -> "OpenAiAssistantNativeSession":
-        api_key = str(spec.parameters["apiKey"])
+        if not spec.api_key:
+            raise ValueError("spec must have api_key")
         impl: OpenAiThreadSpec = None
         if spec.id:
-            impl = client.get_session(api_key, spec.id)
+            impl = client.get_session(spec.api_key, spec.id)
         else:
-            impl = client.create_session(api_key)
+            impl = client.create_session(spec.api_key)
             spec.id = impl.id
-        return cls(spec, api_key, impl)
+        return cls(spec.api_key, spec, impl)
 
     @classmethod
     def from_id(cls, api_key: str, thread_id: str) -> "OpenAiAssistantNativeSession":
@@ -133,8 +191,8 @@ class OpenAiAssistantNativeSession(Session):
 
 def _create_tool_parameters(parameter: ToolSpec.Variable) -> dict:
     type: str = parameter.type.value
-    if not parameter.required:
-        type = f'["{parameter.type.value}","null"]'
+    # if not parameter.required:
+    #     type = f'["{parameter.type.value}","null"]'
 
     p = {
         "type": type,
@@ -147,13 +205,13 @@ def _create_tool_parameters(parameter: ToolSpec.Variable) -> dict:
     return p
 
 
-class OpenAiAssistantTool(Tool):
-    def __init__(self, spec: ToolSpec, impl: OpenAiAssistantToolSpec):
+class OpenAiAssistantTool(ToolDefinition):
+    def __init__(self, impl: OpenAiAssistantToolSpec, spec: ToolSpec, executor: ToolImplementation = None):
         self._impl = impl
-        super().__init__(spec)
+        super().__init__(spec, executor)
 
     @classmethod
-    def from_spec(cls, spec: ToolSpec) -> "OpenAiAssistantTool":
+    def from_definition(cls, spec: ToolSpec, executor: ToolImplementation = None) -> "OpenAiAssistantTool":
         impl: OpenAiAssistantToolSpec = None
         if spec.variables:
             tool_properties = {
@@ -186,60 +244,11 @@ class OpenAiAssistantTool(Tool):
                 ),
             )
 
-        return cls(spec, impl)
+        return cls(spec, impl, executor)
 
     @property
     def openai_tool(self) -> OpenAiAssistantToolSpec:
         return self._impl
-
-
-@ai_agent
-class OpenAiAssistant(Agent):
-    def __init__(
-        self,
-        spec: AgentSpec,
-        api_key: str,
-        impl: OpenAiAssistantSpec,
-        tools: list[OpenAiAssistantTool],
-    ):
-        self._api_key = api_key
-        self._impl = impl
-        self._tools = tools
-        super().__init__(spec)
-
-    @classmethod
-    def from_spec(cls, spec: AgentSpec) -> "OpenAiAssistant":
-        api_key = str(spec.parameters["apiKey"])
-        impl: OpenAiThreadSpec = None
-        if not spec.id:
-            raise ValueError("spec must have an id")
-        impl = client.get_assistant(api_key, spec.id)
-        tools = [OpenAiAssistantTool.from_spec(t) for t in spec.tools]
-        return cls(spec, api_key, impl, tools)
-
-    @classmethod
-    def from_id(cls, api_key: str, assistant_id: str) -> "OpenAiAssistant":
-        if not api_key or not assistant_id:
-            raise ValueError("api_key and assistant_id are required")
-
-        impl: OpenAiThreadSpec = client.get_assistant(api_key, assistant_id)
-        return cls(AgentSpec(id=impl.id), api_key, impl)
-
-    @property
-    def tools(self) -> list[OpenAiAssistantTool]:
-        return self._tools
-
-    @property
-    def api_key(self) -> str:
-        return self._api_key
-
-    @property
-    def openai_assistant(self) -> OpenAiAssistantSpec:
-        return self._impl
-
-    def add_tools(self, tools: list[ToolSpec]) -> Self:
-        self._tools += [OpenAiAssistantTool.from_spec(t) for t in tools]
-        return self
 
 
 def _create_session_message_from_openai_thread_message(
