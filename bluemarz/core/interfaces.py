@@ -67,6 +67,7 @@ class ToolImplementation(ABC):
     def spec(self) -> models.ToolSpec:
         pass
 
+
 class SyncToolExecutor(ABC):
     @classmethod
     @abstractmethod
@@ -78,15 +79,16 @@ class SyncToolExecutor(ABC):
     def tool_name(cls) -> str:
         pass
 
+
 class SyncTool(ToolImplementation):
     @abstractmethod
-    def call(cls, toll_call: models.ToolCall):
+    def call(self, toll_call: models.ToolCall) -> models.ToolCallResult:
         pass
 
 
 class AsyncTool(ToolImplementation):
     @abstractmethod
-    async def call(cls, toll_call: models.ToolCall):
+    async def call(self, toll_call: models.ToolCall) -> models.ToolCallResult:
         pass
 
 

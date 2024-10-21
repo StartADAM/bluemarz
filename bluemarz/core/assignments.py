@@ -2,7 +2,7 @@ import asyncio
 from typing import Any
 
 from bluemarz.core import registries
-from bluemarz.core.interfaces import Agent, AssignmentExecutor, Session
+from bluemarz.core.interfaces import Agent, AssignmentExecutor, Session, ToolImplementation
 from bluemarz.core.models import (
     AddFileResult,
     AddMessageResult,
@@ -10,6 +10,7 @@ from bluemarz.core.models import (
     RunResult,
     RunResultType,
     SessionMessage,
+    SessionFile,
     ToolCall,
     ToolCallResult,
     ToolSpec,
@@ -55,8 +56,16 @@ class Assignment:
     def add_message(self, message: SessionMessage) -> AddMessageResult:
         return self.session.add_message(message)
 
-    def add_file(self) -> AddFileResult:
-        return self.session.add_file()
+    def add_file(self, file: SessionFile) -> AddFileResult:
+        return self.session.add_file(file)
+    
+    def add_tools(self, tools: list[ToolImplementation]) -> None:
+        self.agent.add_tools(tools)
+
+    def add_tools_from_spec(self, tools: list[ToolSpec]) -> None:
+        for t in tools:
+            t.parameters = self.params | t.parameters
+        self.agent.add_tools_from_spec(tools)
 
     "TODO: create test"
     async def run_once(self) -> RunResult:
@@ -98,6 +107,10 @@ class Assignment:
 def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
     spec.agent.parameters = spec.parameters | spec.agent.parameters
     spec.agent.tools.extend(spec.additional_tools)
+    
+    for t in spec.agent.tools:
+        t.parameters = spec.parameters | t.parameters
+
     agent = registries.get_agent_class(spec.agent.type).from_spec(spec.agent)
 
     session = _get_session(spec.agent, spec.session, spec.parameters)
