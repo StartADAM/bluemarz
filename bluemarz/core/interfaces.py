@@ -36,6 +36,11 @@ class Session(ABC):
 class Tool(ABC):
     def __init__(self, spec: models.ToolSpec):
         self._spec = spec
+    
+    @classmethod
+    @abstractmethod
+    def tool_name(cls) -> str:
+        pass
 
     @classmethod
     @abstractmethod
@@ -45,6 +50,35 @@ class Tool(ABC):
     @property
     def spec(self) -> models.ToolSpec:
         return self._spec
+    
+
+    @classmethod
+    @abstractmethod
+    def call(cls, toll_call: models.ToolCall):
+        pass
+
+class AsyncTool(ABC):
+    def __init__(self, spec: models.ToolSpec):
+        self._spec = spec
+    
+    @classmethod
+    @abstractmethod
+    def tool_name(cls) -> str:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def from_spec(cls, spec: models.ToolSpec) -> "Tool":
+        pass
+
+    @property
+    def spec(self) -> models.ToolSpec:
+        return self._spec
+
+    @classmethod
+    @abstractmethod
+    async def call(cls, toll_call: models.ToolCall):
+        pass
 
 
 class SyncToolExecutor(ABC):
