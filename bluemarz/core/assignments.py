@@ -14,7 +14,9 @@ from bluemarz.core.models import (
     ToolCallResult,
     ToolSpec,
     ToolType,
-    MessageRole
+    AssignmentSpec,
+    AgentSpec,
+    SessionSpec,
 )
 
 import logging
@@ -56,6 +58,7 @@ class Assignment:
     def add_file(self) -> AddFileResult:
         return self.session.add_file()
 
+    "TODO: create test"
     async def run_once(self) -> RunResult:
         self.last_tools_submitted = []
         result = self.executor.execute(
@@ -82,10 +85,40 @@ class Assignment:
             self.last_tools_submitted.append(result.tool_call.tool)
             self.session.add_tool_call_result(result)
 
+    "TODO: create test"
     async def run_until_breakpoint(self) -> AssignmentRunResult:
         self.last_tools_submitted = []
         return await _run_assignment_until_breakpoint(self)
+    
+    "TODO: create test"
+    @classmethod
+    def from_spec(cls, spec: AssignmentSpec) -> "Assignment":
+        return _create_assignment_from_spec(spec)
 
+def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
+    spec.agent.parameters = spec.parameters | spec.agent.parameters
+    spec.agent.tools.extend(spec.additional_tools)
+    agent = registries.get_agent_class(spec.agent.type).from_spec(spec.agent)
+
+    session = _get_session(spec.agent, spec.session, spec.parameters)
+    
+    return Assignment(agent, session, None, **spec.parameters)
+
+def _get_session(agent: AgentSpec, session: SessionSpec = None, parameters: dict[str, Any] = None) -> Session:
+    if not session:
+        session = SessionSpec()
+
+    if agent.session_type == "NativeSession":
+        if not session.api_key: 
+            session.api_key = agent.api_key
+
+        session.parameters = agent.parameters | session.parameters
+        session.parameters = parameters | session.parameters
+        session.type = agent.type + "NativeSession"
+    else:
+        session.type = agent.session_type
+
+    return registries.get_session_class(session.type).from_spec(session)
 
 def _tool_can_be_sync_called(toolSpec: ToolSpec) -> bool:
     return toolSpec.tool_type == ToolType.SYNC and registries.has_sync_tool_executor(

@@ -16,25 +16,36 @@ class AddMessageResult(CamelCaseModel):
 
 class DeleteSessionResult(CamelCaseModel):
     ok: bool
+    
+
+class AssignmentSpec(CamelCaseModel):
+    agent: "AgentSpec"
+    session:  "SessionSpec" | None = None
+    additional_tools: list["ToolSpec"] | None = []
+    query: str | None = None
+    parameters: dict[str, Any] = {}
 
 
 class AgentSpec(CamelCaseModel):
     id: str = Field(..., min_length=1)
+    api_key: str | None = Field(None, min_length=1)
     type: str = Field(..., min_length=1)
-    name: str = Field(None, min_length=1)
-    prompt: str = Field(None, min_length=1)
-    model: str = Field(None, min_length=1)
-    default_query: str | None = Field(None, min_length=1)
+    session_type: str = Field(..., min_length=1)
+    model: str | None = None
+    name: str | None = None
+    prompt: str | None = None
+    default_query: str | None = None
     tools: list["ToolSpec"] = []
     parameters: dict[str, Any] = {}
 
 
 class SessionSpec(CamelCaseModel):
-    id: str = Field(None, min_length=1)
-    type: str = Field(..., min_length=1)
+    id: str | None = Field(None, min_length=1)
+    api_key: str | None = Field(None, min_length=1)
+    type: str | None = Field(None, min_length=1)
     messages: list["SessionMessage"] = []
     files: list["SessionFile"] = []
-    initial_tool_calls: list["ToolCall"] = []
+    setup_tool_calls: list["ToolCall"] = []
     parameters: dict[str, Any] = {}
 
 
