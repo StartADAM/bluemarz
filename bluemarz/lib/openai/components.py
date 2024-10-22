@@ -45,8 +45,8 @@ class OpenAiAssistant(Agent):
         self,
         api_key: str,
         impl: OpenAiAssistantSpec,
-        tools: list["OpenAiAssistantTool"] = None,
         spec: AgentSpec,
+        tools: list["OpenAiAssistantTool"] = None,
     ):
         self._api_key = api_key
         self._impl = impl
@@ -275,7 +275,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
     def validate_assignment(
         agent: OpenAiAssistant,
         session: OpenAiAssistantNativeSession,
-        run_id: str | None,
+        run_id: str | None = None,
         **kwargs,
     ) -> None:
         if not agent.api_key == session.api_key:
@@ -293,7 +293,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
     def execute(
         agent: OpenAiAssistant,
         session: OpenAiAssistantNativeSession,
-        run_id: str | None,
+        run_id: str | None = None,
         **kwargs,
     ) -> RunResult:
         api_key = agent.api_key
