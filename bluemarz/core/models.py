@@ -16,14 +16,6 @@ class AddMessageResult(CamelCaseModel):
 
 class DeleteSessionResult(CamelCaseModel):
     ok: bool
-    
-
-class AssignmentSpec(CamelCaseModel):
-    agent: "AgentSpec"
-    session:  "SessionSpec" | None = None
-    additional_tools: list["ToolSpec"] | None = []
-    query: str | None = None
-    parameters: dict[str, Any] = {}
 
 
 class AgentSpec(CamelCaseModel):
@@ -106,6 +98,14 @@ class SessionMessage(CamelCaseModel):
     role: MessageRole
     text: str | None = Field(None, min_length=1)
     files: list[SessionFile] | None = Field(None, min_length=1)
+
+
+class AssignmentSpec(CamelCaseModel):
+    agent: AgentSpec
+    session:  SessionSpec | None = None
+    additional_tools: list[ToolSpec] | None = []
+    query: str | None = None
+    parameters: dict[str, Any] = {}
 
 
 class RunResultType(str, Enum):
