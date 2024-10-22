@@ -69,7 +69,7 @@ class OpenAiAssistant(Agent):
         else:
             tools = []
 
-        return cls(spec, spec.api_key, impl, tools)
+        return cls(spec.api_key, impl, spec, tools)
 
     @classmethod
     def from_id(cls, api_key: str, assistant_id: str) -> "OpenAiAssistant":
@@ -77,7 +77,7 @@ class OpenAiAssistant(Agent):
             raise ValueError("api_key and assistant_id are required")
 
         impl: OpenAiThreadSpec = client.get_assistant(api_key, assistant_id)
-        return cls(AgentSpec(id=impl.id), api_key, impl)
+        return cls(api_key, impl, AgentSpec(id=impl.id))
 
     @property
     def tools(self) -> list["OpenAiAssistantTool"]:
@@ -120,7 +120,7 @@ class OpenAiAssistantNativeSession(Session):
         else:
             impl = client.create_session(spec.api_key)
             spec.id = impl.id
-        return cls(spec.api_key, spec, impl)
+        return cls(spec.api_key, impl, spec)
 
     @classmethod
     def from_id(cls, api_key: str, thread_id: str) -> "OpenAiAssistantNativeSession":
@@ -129,14 +129,14 @@ class OpenAiAssistantNativeSession(Session):
 
         impl: OpenAiThreadSpec = client.get_session(api_key, thread_id)
         return cls(
-            SessionSpec(id=impl.id, type="OpenAiAssistantNativeSession"), api_key, impl
+            api_key, impl, SessionSpec(id=impl.id, type="OpenAiAssistantNativeSession")
         )
 
     @classmethod
     def new_session(cls, api_key: str) -> "OpenAiAssistantNativeSession":
         impl: OpenAiThreadSpec = client.create_session(api_key)
         return cls(
-            SessionSpec(id=impl.id, type="OpenAiAssistantNativeSession"), api_key, impl
+            api_key, impl, SessionSpec(id=impl.id, type="OpenAiAssistantNativeSession")
         )
 
     @property

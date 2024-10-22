@@ -105,31 +105,37 @@ class Assignment:
         return _create_assignment_from_spec(spec)
 
 def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
+    agent = _get_agent(spec)
+    session = _get_session(spec)
+    
+    return Assignment(agent, session, None, **spec.parameters)
+
+def _get_agent(spec: AssignmentSpec):
     spec.agent.parameters = spec.parameters | spec.agent.parameters
     spec.agent.tools.extend(spec.additional_tools)
     
     for t in spec.agent.tools:
         t.parameters = spec.parameters | t.parameters
 
-    agent = registries.get_agent_class(spec.agent.type).from_spec(spec.agent)
+    return registries.get_agent_class(spec.agent.type).from_spec(spec.agent)
 
-    session = _get_session(spec.agent, spec.session, spec.parameters)
-    
-    return Assignment(agent, session, None, **spec.parameters)
-
-def _get_session(agent: AgentSpec, session: SessionSpec = None, parameters: dict[str, Any] = None) -> Session:
+def _get_session(spec: AssignmentSpec) -> Session:
+    agent = spec.agent
+    session = spec.session
+    parameters = spec.parameters
     if not session:
         session = SessionSpec()
 
     if agent.session_type == "NativeSession":
-        if not session.api_key: 
+        if not session.api_key:
             session.api_key = agent.api_key
 
         session.parameters = agent.parameters | session.parameters
         session.parameters = parameters | session.parameters
         session.type = agent.type + "NativeSession"
     else:
-        session.type = agent.session_type
+        if not session.type:
+            session.type = agent.session_type
 
     return registries.get_session_class(session.type).from_spec(session)
 
