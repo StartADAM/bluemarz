@@ -91,8 +91,8 @@ class OpenAiAssistant(Agent):
     def openai_assistant(self) -> OpenAiAssistantSpec:
         return self._impl
 
-    def add_tools(self, tools: list[ToolSpec]) -> Self:
-        self._tools.extend([OpenAiAssistantTool.from_spec(t) for t in tools])
+    def _add_tools(self, tools: list[ToolDefinition]) -> Self:
+        self._tools.extend([OpenAiAssistantTool.from_definition(t.spec, t.executor) for t in tools])
         return self
 
 
