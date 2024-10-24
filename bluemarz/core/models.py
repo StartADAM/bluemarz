@@ -77,7 +77,7 @@ class SessionFile(CamelCaseModel):
 
 class ToolCall(CamelCaseModel):
     id: str | None
-    tool: ToolSpec | None
+    tool: ToolSpec | None = None
     tool_name: str | None = None
     arguments: dict[str, Any]
 
