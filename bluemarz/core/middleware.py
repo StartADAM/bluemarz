@@ -4,10 +4,10 @@ from typing import Callable
 _api_key_middlewares: list[Callable[str,str]] = []
 
 
-@wraps
 def api_key_middleware(func: Callable[str,str]) -> Callable[str,str]:
     _api_key_middlewares.append(func)
     return func
+
 
 def apply_api_key_middleware(api_key: str) -> str:
     result: str = api_key 
