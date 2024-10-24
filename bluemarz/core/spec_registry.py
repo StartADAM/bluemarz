@@ -80,7 +80,7 @@ class StaticInMemmoryRegistry(Generic[T], SpecRegistry[T]):
         raise Exception("Unsupported operation, StaticInMemmoryRegistry is immutable")
     
     @classmethod
-    def from_file(cls, path :Path) -> "InMemmoryRegistry"[T]:
+    def from_file(cls, path :Path) -> "StaticInMemmoryRegistry[T]":
         if not path.is_file:
             raise Exception(f"path {path} not a file")
         
@@ -101,7 +101,7 @@ class StaticInMemmoryRegistry(Generic[T], SpecRegistry[T]):
         return cls(final_dict)
 
     @classmethod
-    def from_url(cls, path :HttpUrl) -> "InMemmoryRegistry"[T]:
+    def from_url(cls, path :HttpUrl) -> "StaticInMemmoryRegistry[T]":
         urllib.request.urlretrieve(str(path), "temp.json")
         registry = cls.from_file(Path("temp.json"))
         os.remove("temp.json")
