@@ -39,7 +39,7 @@ class InMemmoryRegistry(Generic[T], SpecRegistry[T]):
         self._registry[id] = spec
     
     @classmethod
-    def from_file(cls, path :Path) -> "InMemmoryRegistry"[T]:
+    def from_file(cls, path :Path) -> "InMemmoryRegistry[T]":
         if not path.is_file:
             raise Exception(f"path {path} not a file")
         
@@ -57,7 +57,7 @@ class InMemmoryRegistry(Generic[T], SpecRegistry[T]):
         return cls(final_dict)
 
     @classmethod
-    def from_url(cls, path :HttpUrl) -> "InMemmoryRegistry"[T]:
+    def from_url(cls, path :HttpUrl) -> "InMemmoryRegistry[T]":
         urllib.request.urlretrieve(str(path), "temp.json")
         registry = cls.from_file(Path("temp.json"))
         os.remove("temp.json")
