@@ -1,6 +1,6 @@
 import pytest
 from bluemarz.core.exceptions import InvalidDefinition
-from bluemarz.core.registries import assignment_executor, get_executor
+from bluemarz.core.class_registry import assignment_executor, get_executor
 from test.unit.mocks.core import MockAgent, MockExecutor, MockSession
 
 def test_get_executor():

@@ -10,6 +10,7 @@ from bluemarz.core.interfaces import (
     ToolDefinition,
     ToolImplementation,
 )
+from bluemarz.core.middleware import apply_api_key_middleware
 from bluemarz.core.models import (
     AddFileResult,
     AddMessageResult,
@@ -25,7 +26,7 @@ from bluemarz.core.models import (
     ToolCallResult,
     ToolSpec,
 )
-from bluemarz.core.registries import ai_agent, ai_session, assignment_executor
+from bluemarz.core.class_registry import ai_agent, ai_session, assignment_executor
 from bluemarz.lib.openai import client
 from bluemarz.lib.openai.models import (
     FunctionTool,
@@ -60,16 +61,18 @@ class OpenAiAssistant(Agent):
     def from_spec(cls, spec: AgentSpec) -> "OpenAiAssistant":
         if not spec.id:
             raise ValueError("spec must have id")
-        if not spec.id:
+        if not spec.api_key:
             raise ValueError("spec must have api_key")
         
-        impl = client.get_assistant(spec.api_key, spec.id)
+        api_key: str = apply_api_key_middleware(spec.api_key)
+        
+        impl = client.get_assistant(api_key, spec.id)
         if spec.tools:
             tools = [OpenAiAssistantTool.from_spec(t) for t in spec.tools]
         else:
             tools = []
 
-        return cls(spec.api_key, impl, spec, tools)
+        return cls(api_key, impl, spec, tools)
 
     @classmethod
     def from_id(cls, api_key: str, assistant_id: str) -> "OpenAiAssistant":
@@ -114,13 +117,16 @@ class OpenAiAssistantNativeSession(Session):
     def from_spec(cls, spec: SessionSpec) -> "OpenAiAssistantNativeSession":
         if not spec.api_key:
             raise ValueError("spec must have api_key")
+        
+        api_key: str = apply_api_key_middleware(spec.api_key)
+        
         impl: OpenAiThreadSpec = None
         if spec.id:
             impl = client.get_session(spec.api_key, spec.id)
         else:
             impl = client.create_session(spec.api_key)
             spec.id = impl.id
-        return cls(spec.api_key, impl, spec)
+        return cls(api_key, impl, spec)
 
     @classmethod
     def from_id(cls, api_key: str, thread_id: str) -> "OpenAiAssistantNativeSession":
