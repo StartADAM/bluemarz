@@ -39,7 +39,7 @@ class InMemmoryRegistry(Generic[T], SpecRegistry[T]):
         self._registry[id] = spec
     
     @classmethod
-    def from_file(cls, path :Path) -> "InMemmoryRegistry[T]":
+    def from_file(cls, class_type: type, path :Path) -> "InMemmoryRegistry[T]":
         if not path.is_file:
             raise Exception(f"path {path} not a file")
         
@@ -52,14 +52,14 @@ class InMemmoryRegistry(Generic[T], SpecRegistry[T]):
         
         final_dict: dict[str, T] = {}
         for key in init_dict:
-            init_dict[key] = cls.__args__[0](init_dict[key])
+            init_dict[key] = class_type(init_dict[key])
 
-        return cls(final_dict)
+        return cls[class_type](final_dict)
 
     @classmethod
-    def from_url(cls, path :HttpUrl) -> "InMemmoryRegistry[T]":
+    def from_url(cls, class_type: type, path :HttpUrl) -> "InMemmoryRegistry[T]":
         urllib.request.urlretrieve(str(path), "temp.json")
-        registry = cls.from_file(Path("temp.json"))
+        registry = cls.from_file(class_type, Path("temp.json"))
         os.remove("temp.json")
         return registry
     
@@ -80,7 +80,7 @@ class StaticInMemmoryRegistry(Generic[T], SpecRegistry[T]):
         raise Exception("Unsupported operation, StaticInMemmoryRegistry is immutable")
     
     @classmethod
-    def from_file(cls, path :Path) -> "StaticInMemmoryRegistry[T]":
+    def from_file(cls, class_type: type, path :Path) -> "StaticInMemmoryRegistry[T]":
         if not path.is_file:
             raise Exception(f"path {path} not a file")
         
@@ -93,17 +93,17 @@ class StaticInMemmoryRegistry(Generic[T], SpecRegistry[T]):
         
         final_dict: dict[str, T] = {}
         for key in init_dict:
-            init_dict[key] = cls.__args__[0](init_dict[key])
+            init_dict[key] = class_type[0](init_dict[key])
 
         if not final_dict:
             raise Exception(f"Cannot create StaticInMemmoryRegistry with empty registry contents")
 
-        return cls(final_dict)
+        return cls[class_type](final_dict)
 
     @classmethod
-    def from_url(cls, path :HttpUrl) -> "StaticInMemmoryRegistry[T]":
+    def from_url(cls, class_type: type, path :HttpUrl) -> "StaticInMemmoryRegistry[T]":
         urllib.request.urlretrieve(str(path), "temp.json")
-        registry = cls.from_file(Path("temp.json"))
+        registry = cls.from_file(class_type, Path("temp.json"))
         os.remove("temp.json")
         return registry
     
