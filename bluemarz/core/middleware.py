@@ -1,10 +1,11 @@
 from functools import wraps
+from typing import Callable
 
-_api_key_middlewares: list[function] = []
+_api_key_middlewares: list[Callable[str,str]] = []
 
 
 @wraps
-def api_key_middleware(func: function) -> function:
+def api_key_middleware(func: Callable[str,str]) -> Callable[str,str]:
     _api_key_middlewares.append(func)
     return func
 
