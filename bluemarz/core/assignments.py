@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any
 
-from bluemarz.core import registries
+from bluemarz.core import class_registry
 from bluemarz.core.interfaces import Agent, AssignmentExecutor, Session, ToolImplementation
 from bluemarz.core.models import (
     AddFileResult,
@@ -16,7 +16,6 @@ from bluemarz.core.models import (
     ToolSpec,
     ToolType,
     AssignmentSpec,
-    AgentSpec,
     SessionSpec,
 )
 
@@ -42,7 +41,7 @@ class Assignment:
         self.agent = agent
         self.session = session
         self.run_id = run_id
-        self.executor = registries.get_executor(agent, session)
+        self.executor = class_registry.get_executor(agent, session)
         self.last_tools_submitted = []
         self.params = kwargs
 
@@ -117,7 +116,7 @@ def _get_agent(spec: AssignmentSpec):
     for t in spec.agent.tools:
         t.parameters = spec.parameters | t.parameters
 
-    return registries.get_agent_class(spec.agent.type).from_spec(spec.agent)
+    return class_registry.get_agent_class(spec.agent.type).from_spec(spec.agent)
 
 def _get_session(spec: AssignmentSpec) -> Session:
     agent = spec.agent
@@ -137,16 +136,16 @@ def _get_session(spec: AssignmentSpec) -> Session:
         if not session.type:
             session.type = agent.session_type
 
-    return registries.get_session_class(session.type).from_spec(session)
+    return class_registry.get_session_class(session.type).from_spec(session)
 
 def _tool_can_be_sync_called(toolSpec: ToolSpec) -> bool:
-    return toolSpec.tool_type == ToolType.SYNC and registries.has_sync_tool_executor(
+    return toolSpec.tool_type == ToolType.SYNC and class_registry.has_sync_tool_executor(
         toolSpec.name
     )
 
 
 async def _execute_sync_tool_call(toolCall: ToolCall) -> ToolCallResult:
-    executor_class = registries.get_sync_tool_executor(toolCall.tool.name)
+    executor_class = class_registry.get_sync_tool_executor(toolCall.tool.name)
     return executor_class.execute_call(toolCall)
 
 
