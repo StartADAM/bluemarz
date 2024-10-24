@@ -52,7 +52,7 @@ class InMemmoryRegistry(Generic[T], SpecRegistry[T]):
         
         final_dict: dict[str, T] = {}
         for key in init_dict:
-            init_dict[key] = T(init_dict[key])
+            init_dict[key] = cls.__args__[0](init_dict[key])
 
         return cls(final_dict)
 
@@ -93,7 +93,7 @@ class StaticInMemmoryRegistry(Generic[T], SpecRegistry[T]):
         
         final_dict: dict[str, T] = {}
         for key in init_dict:
-            init_dict[key] = T(init_dict[key])
+            init_dict[key] = cls.__args__[0](init_dict[key])
 
         if not final_dict:
             raise Exception(f"Cannot create StaticInMemmoryRegistry with empty registry contents")
