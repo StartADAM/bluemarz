@@ -122,9 +122,9 @@ class OpenAiAssistantNativeSession(Session):
         
         impl: OpenAiThreadSpec = None
         if spec.id:
-            impl = client.get_session(spec.api_key, spec.id)
+            impl = client.get_session(api_key, spec.id)
         else:
-            impl = client.create_session(spec.api_key)
+            impl = client.create_session(api_key)
             spec.id = impl.id
         return cls(api_key, impl, spec)
 
