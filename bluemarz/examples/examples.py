@@ -1,6 +1,6 @@
 from bluemarz.core.interfaces import SyncToolExecutor
 from bluemarz.core.models import ToolCall, ToolCallResult
-from bluemarz.core.registries import sync_tool_executor
+from bluemarz.core.class_registry import sync_tool_executor
 
 
 @sync_tool_executor

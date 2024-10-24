@@ -45,11 +45,11 @@ def ai_session(session: type[__S]) -> type[__S]:
     return session
 
 
-def get_session_class(agent_name: str) -> type[Session]:
+def get_session_class(session_type: str) -> type[Session]:
     try:
-        return _sessions[agent_name]
+        return _sessions[session_type]
     except KeyError:
-        raise InvalidDefinition(f"Unknown agent {agent_name}")
+        raise InvalidDefinition(f"Unknown session {session_type}")
 
 
 __A = TypeVar("__A", bound=Agent)
@@ -63,11 +63,11 @@ def ai_agent(agent: type[__A]) -> type[__A]:
     return agent
 
 
-def get_agent_class(agent_name: str) -> type[Agent]:
+def get_agent_class(agent_type: str) -> type[Agent]:
     try:
-        return _agents[agent_name]
+        return _agents[agent_type]
     except KeyError:
-        raise InvalidDefinition(f"Unknown agent {agent_name}")
+        raise InvalidDefinition(f"Unknown agent {agent_type}")
 
 
 __AE = TypeVar("__A", bound=AssignmentExecutor)
