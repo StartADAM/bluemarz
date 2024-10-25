@@ -196,7 +196,7 @@ class OpenAiAssistantNativeSession(Session):
 
     @property
     def is_empty(self):
-        return bool(client.get_thread_messages(self._api_key, self._impl.id))
+        return not bool(client.get_thread_messages(self._api_key, self._impl.id))
 
 
 def _create_tool_parameters(parameter: ToolSpec.Variable) -> dict:
