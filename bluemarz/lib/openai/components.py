@@ -194,6 +194,10 @@ class OpenAiAssistantNativeSession(Session):
 
         self.add_message(message)
 
+    @property
+    def is_empty(self):
+        return bool(client.get_thread_messages(self._api_key, self._impl.id))
+
 
 def _create_tool_parameters(parameter: ToolSpec.Variable) -> dict:
     type: str = parameter.type.value

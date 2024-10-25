@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Self, TypeVar
+from typing import Self
 
 from bluemarz.core import models
 
@@ -11,6 +11,11 @@ class Session(ABC):
     @property
     def spec(self) -> models.SessionSpec:
         return self._spec
+
+    @property
+    @abstractmethod
+    def is_empty(self) -> bool:
+        pass
 
     @classmethod
     @abstractmethod
