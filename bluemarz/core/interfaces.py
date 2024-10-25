@@ -47,8 +47,8 @@ class ToolDefinition(ABC):
     def from_implementation(cls, implementation: "ToolImplementation") -> "ToolDefinition":
         return cls.from_definition(implementation.spec, implementation)
     
-    @abstractmethod
     @classmethod
+    @abstractmethod
     def from_definition(cls, spec: models.ToolSpec, executor: "ToolImplementation" = None):
         pass
 
