@@ -250,7 +250,7 @@ class OpenAiAssistantTool(ToolDefinition):
                 ),
             )
 
-        return cls(spec, impl, executor)
+        return cls(impl, spec, executor)
 
     @property
     def openai_tool(self) -> OpenAiAssistantToolSpec:

@@ -41,11 +41,16 @@ class ToolDefinition(ABC):
 
     @classmethod
     def from_spec(cls, spec: models.ToolSpec) -> "ToolDefinition":
-        return cls(spec, None)
+        return cls.from_definition(spec, None)
 
     @classmethod
-    def from_implementation(cls, executor: "ToolImplementation") -> "ToolDefinition":
-        return cls.from_spec(executor.spec, executor)
+    def from_implementation(cls, implementation: "ToolImplementation") -> "ToolDefinition":
+        return cls.from_definition(implementation.spec, implementation)
+    
+    @abstractmethod
+    @classmethod
+    def from_definition(cls, spec: models.ToolSpec, executor: "ToolImplementation" = None):
+        pass
 
     @property
     def spec(self) -> models.ToolSpec:
