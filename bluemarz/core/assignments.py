@@ -114,11 +114,11 @@ def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
     return Assignment(agent, session, None, **spec.parameters)
 
 def _get_agent(spec: AssignmentSpec):
-    spec.agent.parameters = spec.parameters | spec.agent.parameters
+    spec.agent.parameters = _merge_parameters(spec.parameters, spec.agent.parameters)
     spec.agent.tools.extend(spec.additional_tools)
     
     for t in spec.agent.tools:
-        t.parameters = spec.parameters | t.parameters
+        t.parameters = _merge_parameters(spec.parameters, t.parameters)
 
     return class_registry.get_agent_class(spec.agent.type).from_spec(spec.agent)
 
@@ -133,14 +133,23 @@ def _get_session(spec: AssignmentSpec) -> Session:
         if not session.api_key:
             session.api_key = agent.api_key
 
-        session.parameters = agent.parameters | session.parameters
-        session.parameters = parameters | session.parameters
+        session.parameters = _merge_parameters(_merge_parameters(parameters, agent.parameters), session.parameters)
         session.type = agent.type + "NativeSession"
     else:
+        session.parameters = _merge_parameters(parameters, session.parameters)
         if not session.type:
             session.type = agent.session_type
 
     return class_registry.get_session_class(session.type).from_spec(session)
+
+def _merge_parameters(super_parameters: dict[str,Any], spec_parameters: dict[str,Any]) -> dict[str,Any]:
+    for key in spec_parameters:
+        value = spec_parameters[key]
+        if isinstance(value, str) and str(value).startswith("$parameters."):
+            template_key = str(value).split('.',2)[1]
+            spec_parameters[key] = super_parameters[template_key]
+    
+    return super_parameters | spec_parameters
 
 def _tool_can_be_sync_called(toolSpec: ToolSpec) -> bool:
     return toolSpec.tool_type == ToolType.SYNC and class_registry.has_sync_tool_executor(

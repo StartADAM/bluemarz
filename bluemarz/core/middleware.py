@@ -1,4 +1,3 @@
-from functools import wraps
 from typing import Callable
 
 _api_key_middlewares: list[Callable[str,str]] = []
