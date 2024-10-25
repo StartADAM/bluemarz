@@ -108,7 +108,9 @@ def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
     agent = _get_agent(spec)
     session = _get_session(spec)
 
-    if session.is_empty and agent.spec.default_query:
+    if spec.query:
+        session.add_message(SessionMessage(role=MessageRole.USER, text=spec.query))
+    elif session.is_empty and agent.spec.default_query:
         session.add_message(SessionMessage(role=MessageRole.USER, text=agent.spec.default_query))
     
     return Assignment(agent, session, None, **spec.parameters)
