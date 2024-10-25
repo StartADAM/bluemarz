@@ -147,7 +147,8 @@ def _merge_parameters(super_parameters: dict[str,Any], spec_parameters: dict[str
         value = spec_parameters[key]
         if isinstance(value, str) and str(value).startswith("$parameters."):
             template_key = str(value).split('.',2)[1]
-            spec_parameters[key] = super_parameters[template_key]
+            if template_key in super_parameters:
+                spec_parameters[key] = super_parameters[template_key]
     
     return super_parameters | spec_parameters
 
