@@ -1,9 +1,9 @@
 from typing import Callable
 
-_api_key_middlewares: list[Callable[str,str]] = []
+_api_key_middlewares: list[Callable[[str],str]] = []
 
 
-def api_key_middleware(func: Callable[str,str]) -> Callable[str,str]:
+def api_key_middleware(func: Callable[[str],str]) -> Callable[[str],str]:
     _api_key_middlewares.append(func)
     return func
 
