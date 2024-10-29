@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Self
+from typing import Self, Union
 
 from bluemarz.core import models
 
@@ -40,7 +40,7 @@ class Session(ABC):
 
 
 class ToolDefinition(ABC):
-    def __init__(self, spec: models.ToolSpec, executor: "ToolImplementation" = None):
+    def __init__(self, spec: models.ToolSpec, executor: Union["SyncTool", "AsyncTool"] = None):
         self._spec = spec
         self._executor = executor
 
@@ -64,7 +64,7 @@ class ToolDefinition(ABC):
     @property
     def executor(self) -> "ToolImplementation":
         return self._executor
-    
+
 
 class ToolImplementation(ABC):
     @classmethod

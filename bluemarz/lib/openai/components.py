@@ -80,7 +80,7 @@ class OpenAiAssistant(Agent):
             raise ValueError("api_key and assistant_id are required")
 
         impl: OpenAiThreadSpec = client.get_assistant(api_key, assistant_id)
-        return cls(api_key, impl, AgentSpec(id=impl.id))
+        return cls(api_key, impl, AgentSpec(id=impl.id, type="OpenAiAssistant", session_type="NativeSession"))
 
     @property
     def tools(self) -> list["OpenAiAssistantTool"]:
