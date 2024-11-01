@@ -115,6 +115,8 @@ class OpenAiAssistantNativeSession(Session):
 
     @classmethod
     def from_spec(cls, spec: SessionSpec) -> "OpenAiAssistantNativeSession":
+        new_session: bool = not bool(spec.id)
+
         if not spec.api_key:
             raise ValueError("spec must have api_key")
         
@@ -126,7 +128,14 @@ class OpenAiAssistantNativeSession(Session):
         else:
             impl = client.create_session(api_key)
             spec.id = impl.id
-        return cls(api_key, impl, spec)
+
+        session = cls(api_key, impl, spec)
+
+        if new_session and spec.messages:
+            for message in spec.messages:
+                session.add_message(message)
+
+        return session
 
     @classmethod
     def from_id(cls, api_key: str, thread_id: str) -> "OpenAiAssistantNativeSession":
@@ -169,7 +178,14 @@ class OpenAiAssistantNativeSession(Session):
             client.create_message(self._api_key, self._impl.id, role, message.text)
         else:
             self._files.extend(message.files)
-            files = client.upload_files(self._api_key, message.files)
+            files = []
+
+            to_upload = [f for f in message.files if not f.id]
+            to_get_ids = [f.id for f in message.files if f.id]
+
+            files.extend(client.upload_files(self._api_key, to_upload))
+            files.extend(client.get_files(self._api_key, to_get_ids))
+
             client.create_message(self._api_key, self._impl.id, role, message.text, files = files)
 
         return AddMessageResult(ok=True)

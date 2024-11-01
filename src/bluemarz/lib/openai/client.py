@@ -264,13 +264,30 @@ def delete_session(openai_key: str, thread_id: str) -> None:
         print(resp.content)
         raise Exception("Error in delete_session")
 
+def get_files(
+    openai_key: str, file_ids: list[str]    
+) -> list[models.OpenAiFileSpec]:
+    api_url = "https://api.openai.com/v1/files"
+    fetched_files: list[models.OpenAiFileSpec] = []
+    for file_id in file_ids:
+        resp = requests.get(
+            api_url+"/"+file_id,
+            headers=_get_assistants_api_headers(openai_key),
+        )
+
+        if resp.status_code != 200:
+            print(resp.content)
+        else:
+            fetched_files.append(_desserialize(resp, models.OpenAiFileSpec))
+
+    return fetched_files
 
 def upload_files(
     openai_key: str, files: list[SessionFile]
 ) -> list[models.OpenAiFileSpec]:
     api_url = "https://api.openai.com/v1/files"
 
-    upload_files = []
+    upload_files: list[models.OpenAiFileSpec] = []
     for file in files:
         urllib.request.urlretrieve(str(file.url), file.file_name)
 
