@@ -69,10 +69,10 @@ class ToolSpec(CamelCaseModel):
 
 
 class SessionFile(CamelCaseModel):
-    id: str = None
-    file_name: str
-    file_size_bytes: int
-    url: HttpUrl
+    id: str | None = None
+    file_name: str | None = None
+    file_size_bytes: int | None = None
+    url: HttpUrl | None = None
 
 
 class ToolCall(CamelCaseModel):
