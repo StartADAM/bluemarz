@@ -93,7 +93,7 @@ class Assignment:
             self.agent, self.session, self.run_id, tool_call_results, **self.params
         )
 
-    def prepare_for_async_tool_calls(self) -> None:
+    def _prepare_for_async_tool_calls(self) -> None:
         self.executor.prepare_for_async_tool_calls(
             self.agent, self.session, self.run_id, **self.params
         )

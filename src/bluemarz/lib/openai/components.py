@@ -33,6 +33,7 @@ from bluemarz.lib.openai.models import (
     OpenAiAssistantSpec,
     OpenAiAssistantToolSpec,
     OpenAiAssistantToolType,
+    OpenAiFileSpec,
     OpenAiThreadRun,
     OpenAiThreadSpec,
     OpenAiToolCallSpec,
@@ -167,7 +168,16 @@ class OpenAiAssistantNativeSession(Session):
         return self._files
 
     def add_file(self, file: SessionFile) -> AddFileResult:
-        raise NotImplementedError
+        openai_file: OpenAiFileSpec = None
+
+        if file.id:
+            openai_file = client.upload_files(self._api_key, [file])
+        else:
+            openai_file = client.get_files(self._api_key, [file.id])
+
+        client.create_message(self._api_key, self._impl.id, "user", None, files = [openai_file])
+
+        return AddMessageResult(ok=True)
 
     def add_message(self, message: SessionMessage) -> AddMessageResult:
         role: str = "assistant"
