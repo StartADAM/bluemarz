@@ -4,7 +4,7 @@
 
 This is the same example as shown in Overview section.
 
-<code-block lang="python" noinject="true">
+```
     import bluemarz as bm
     import asyncio
     async def procedural_example():
@@ -22,7 +22,7 @@ This is the same example as shown in Overview section.
         # print results
         print(f"Q:{msg}")
         print(f"A:{res.last_run_result.messages[0].text}")asyncio.run(procedural_example())
-</code-block>
+```
 
 Following the comments, you can see Bluemarz concepts being used:
 
@@ -35,7 +35,7 @@ Following the comments, you can see Bluemarz concepts being used:
 
 Specs (specifications) allows you better control on how to build your Session, Agent or Assignment. For example:
 
-<code-block lang="python" noinject="true">
+```
     import bluemarz as bm
     async def from_spec_example():
         msg= "What can you do?"
@@ -53,7 +53,7 @@ Specs (specifications) allows you better control on how to build your Session, A
         res = await task.run_until_breakpoint()
         print(f"Q:{msg}")
         print(f"A:{res.last_run_result.messages[0].text}")
-</code-block>
+```
 
 Specs are textual descriptions in property-list format of the characteristics of the desired element (an Assignment in this case). In this example, the following properties are being used:
 
@@ -82,7 +82,7 @@ Async tool calling is an important Bluemarz addition since frequently in high pe
 
 You can define a Tool from its spec:
 
-<code-block lang="python" noinject="true">
+```
     class Tool(bm.SyncTool):
         def __init__(self):
                 self._spec = bm.ToolSpec.model_validate(
@@ -114,7 +114,7 @@ You can define a Tool from its spec:
                 text=conversion
             )
 
-</code-block>
+```
 
 A Tool is represented by a class extending bm.SyncTool or bm.AsyncTool. 
 The following methods must be implemented:
@@ -133,7 +133,7 @@ In this example, the Tool spec includes:
 
 A tool can be used following in an Agent activation as in:
 
-<code-block lang="python" noinject="true">
+```
     async def tool_call_procedural_example():
         msg="Please convert 32 degress celsius to kelvin using the convert_celsius_temperature tool"
         spec = bm.AssignmentSpec(
@@ -151,7 +151,7 @@ A tool can be used following in an Agent activation as in:
         res = await task.run_until_breakpoint()
         print(f"Q:{msg}")
         print(f"A:{res.last_run_result.messages[0].text}")
-</code-block>
+```
 
 It´s similar to previous example but, in this case, a tool has been added to the Assignment using the simple task.add_tools() method. Any number of tools can be added.
 
@@ -159,7 +159,7 @@ It´s similar to previous example but, in this case, a tool has been added to th
 
 Instead of adding tools programatically as the above example, you can also add tool via spec. Check the following example:
 
-<code-block lang="python" noinject="true">
+```
     async def tool_call_executor_example():
         msg = "Please convert 32 degress celsius to kelvin using the convert_celsius_temperature tool"
         spec = bm.AssignmentSpec.model_validate(
@@ -192,13 +192,13 @@ Instead of adding tools programatically as the above example, you can also add t
         res = await task.run_until_breakpoint()
         print(f"Q:{msg}")
         print(f"A:{res.last_run_result.messages[0].text}")
-</code-block>
+```
 
 This example is similar to the previous one but includes the tool definition as a spec, using the same attributes as the previous class example. This textual form allows alternatives, like using a ToolRepository, explained later.
 
 In this case, a ToolExecutor must be injected to allow the tool to be really executed. Note we´re exchanging the procedural flow (using task.add_tools() as previous example) by code injection (using annotation @bm.sync_tool_executor).
 
-<code-block lang="python" noinject="true">
+```
     @bm.sync_tool_executor
     class KelvinCelsiusTool(bm.SyncToolExecutor):
         @classmethod
@@ -213,7 +213,7 @@ In this case, a ToolExecutor must be injected to allow the tool to be really exe
                 text=conversion
             )
 
-</code-block>
+```
 
 ## Adding files
 
