@@ -4,7 +4,7 @@
 
 ## What is Bluemarz?
 
-Bluemarz is an open-source management layer for AI agents, offering a flexible, scalable, and stateless architecture for deploying and orchestrating AI agents.
+Bluemarz is an open-source management layer for AI agents, offering a flexible, scalable, and stateless architecture for deploying and orchestrating multiple AI agents in sessions.
 It supports multiple LLMs, including OpenAI, Claude, and Gemini, and is designed to meet enterprise needs such as security, privacy, access controls, and multi-agent collaboration.
 
 It runs on Python 3.12+
