@@ -1,7 +1,6 @@
 # Bluemarz
 
-<img src="bluemarz.png" width="200" height="200" />
-![Bluemarz logo](bluemarz.png "Bluemarz logo" )
+<img src="bluemarz.png" width="325" class="center" />
 
 ## What is Bluemarz?
 
