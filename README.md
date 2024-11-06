@@ -30,6 +30,9 @@ async def procedural_example():
 asyncio.run(procedural_example())
 </code-block>
 
+If you´re looking for more examples, check [Examples](Example.md).
+
+
 ## Why Bluemarz?
 
 Bluemarz addresses key shortcomings found in other platforms like Langchain, Langraph, Chainlit and OpenAI by focusing on multi-agent deployments, session management, and scalability. 
