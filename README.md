@@ -30,7 +30,7 @@ async def procedural_example():
 asyncio.run(procedural_example())
 ```
 
-If you´re looking for more examples, check [Examples](Examples.md).
+If you´re looking for more examples, check [Examples](./docs/Examples.md).
 
 
 ## Why Bluemarz?
