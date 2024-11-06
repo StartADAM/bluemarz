@@ -171,9 +171,9 @@ class OpenAiAssistantNativeSession(Session):
         openai_file: OpenAiFileSpec = None
 
         if file.id:
-            openai_file = client.upload_files(self._api_key, [file])
-        else:
             openai_file = client.get_files(self._api_key, [file.id])
+        else:
+            openai_file = client.upload_files(self._api_key, [file])
 
         client.create_message(self._api_key, self._impl.id, "user", None, files = [openai_file])
 
