@@ -1,6 +1,6 @@
 # Bluemarz
 
-![Bluemarz logo](image_1.png "Bluemarz logo")
+![Bluemarz logo](bluemarz.png "Bluemarz logo")
 
 ## What is Bluemarz?
 
