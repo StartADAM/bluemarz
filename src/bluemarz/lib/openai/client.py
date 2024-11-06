@@ -40,6 +40,8 @@ def create_message(
 
     if content:
         body["content"] = content
+    else:
+        body["content"] = ""
 
     if files:
         body["attachments"] = [
