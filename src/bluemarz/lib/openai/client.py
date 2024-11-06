@@ -36,7 +36,10 @@ def create_message(
     files: list[models.OpenAiFileSpec] = None,
 ) -> models.ThreadMessage:
     api_url = f"https://api.openai.com/v1/threads/{thread_id}/messages"
-    body = {"role": role, "content": content}
+    body = {"role": role}
+
+    if content:
+        body["content"] = content
 
     if files:
         body["attachments"] = [
@@ -62,7 +65,7 @@ def create_run(
     tools: list[models.OpenAiAssistantToolSpec] = []
     if additional_tools:
         tools.extend(additional_tools)
-    if assistant.tools: 
+    if assistant.tools:
         tools.extend(assistant.tools)
 
     # if files:
@@ -264,14 +267,13 @@ def delete_session(openai_key: str, thread_id: str) -> None:
         print(resp.content)
         raise Exception("Error in delete_session")
 
-def get_files(
-    openai_key: str, file_ids: list[str]    
-) -> list[models.OpenAiFileSpec]:
+
+def get_files(openai_key: str, file_ids: list[str]) -> list[models.OpenAiFileSpec]:
     api_url = "https://api.openai.com/v1/files"
     fetched_files: list[models.OpenAiFileSpec] = []
     for file_id in file_ids:
         resp = requests.get(
-            api_url+"/"+file_id,
+            api_url + "/" + file_id,
             headers=_get_assistants_api_headers(openai_key),
         )
 
@@ -281,6 +283,7 @@ def get_files(
             fetched_files.append(_desserialize(resp, models.OpenAiFileSpec))
 
     return fetched_files
+
 
 def upload_files(
     openai_key: str, files: list[SessionFile]
