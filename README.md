@@ -30,6 +30,7 @@ async def procedural_example():
 asyncio.run(procedural_example())
 </code-block>
 
+
 If you´re looking for more examples, check [Examples](Examples.md).
 
 
