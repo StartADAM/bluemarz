@@ -11,7 +11,7 @@ It runs on Python 3.12+
 
 ## Code primer
 
-<code-block lang="python" noinject="true">
+```
 import bluemarz as bm
 import asyncio
 async def procedural_example():
@@ -28,8 +28,7 @@ async def procedural_example():
     # print results
     print(res)
 asyncio.run(procedural_example())
-</code-block>
-
+```
 
 If you´re looking for more examples, check [Examples](Examples.md).
 
