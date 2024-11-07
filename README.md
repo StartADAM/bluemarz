@@ -12,6 +12,15 @@ It runs on Python 3.12+
 
 ## Code primer
 
+Install with
+pip install git+https://github.com/StartADAM/bluemarz.git
+
+The following code uses the 3 main concepts in Bluemarz:
+- Agent, provided by any supported LLM;
+- Session, where the dialog User-Agent happens;
+- Assignment of an Agent to a Session to be used in a dialog.
+
+
 ```
 import bluemarz as bm
 import asyncio
