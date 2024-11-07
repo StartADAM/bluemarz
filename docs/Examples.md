@@ -1,6 +1,6 @@
 ﻿# Examples
 
-## Initial example
+## Basic example
 
 This is the same example as shown in Overview section.
 
@@ -217,10 +217,51 @@ In this case, a ToolExecutor must be injected to allow the tool to be really exe
 
 ## Adding files
 
-example to be added
+In this example, a file is added to the context window, expanding LLM´s knowledge.
+
+```
+async def file_usage_example():
+    msg = "What´s Bluemarz?"
+    agent = bm.openai.OpenAiAssistant.from_id(oai_api_key, assistant_id)
+    session = bm.openai.OpenAiAssistantNativeSession.new_session(oai_api_key)
+    task = bm.Assignment(agent, session)
+    a_file = bm.SessionFile(url="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", file_name="dummy.pdf")
+    session.add_file(a_file)
+    task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg))
+    res = await task.run_until_breakpoint()
+    print(f"Q:{msg}")
+    print(f"A:{res.last_run_result.messages[0].text}")
+```
+
+It´s the same basic example with the addition of a file. To add a file to a Session you need to:
+- create a SessionFile, specifying a URL from where to retrieve the file and a file_name to be used. Local files cannot be added in current version.
+- add the file to the Session by calling session.add_file() method.
+
 
 ## Using 2 Agents in a Session (sequencial agentic flow)
 
-example to be added
+In this example, 2 Agents are used in sequence, under the same Session.
+The example follows the same structure as in Basic Example.
 
+```
+async def many_agents_example():
+    msg1 = "What´s Bluemarz?"
+    agent1 = bm.openai.OpenAiAssistant.from_id(oai_api_key, assistant_id)
+    session = bm.openai.OpenAiAssistantNativeSession.new_session(oai_api_key)
+    task = bm.Assignment(agent1, session)
+    task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg1))
+    res = await task.run_until_breakpoint()
+    print(f"Q:{msg1}")
+    print(f"A:{res.last_run_result.messages[0].text}")
+
+    msg2 = "What was the first question?"
+    agent2 = bm.openai.OpenAiAssistant.from_id(oai_api_key, second_assistant_id)
+    task = bm.Assignment(agent2, session)
+    task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg2))
+    res = await task.run_until_breakpoint()
+    print(f"Q:{msg2}")
+    print(f"A:{res.last_run_result.messages[0].text}")
+```
+
+The same basic example is initially used. Then, a new Agent (agent2) is retrieve and added to the Session. Next messages (task.add_message()) are sent to it.
 
