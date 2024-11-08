@@ -2,7 +2,7 @@
 
 ## Basic example
 
-This is the same example as shown in Overview section.
+This is the same example as shown in the Overview section.
 
 ```
     import bluemarz as bm
@@ -27,13 +27,13 @@ This is the same example as shown in Overview section.
 Following the comments, you can see Bluemarz concepts being used:
 
 * retrieval of an Agent (in this case, from OpenAI)
-* creation of a Session to dialog with an Agent (again, in OpenAI)
-* creation of an Assignment, the association of an Agent to a Session
+* creation of a Session to initiate a conversation with an Agent (again, in OpenAI)
+* creating an Assignment, to associate an Agent with a Session
 * the dialog itself
 
 ## Using specs
 
-Specs (specifications) allows you better control on how to build your Session, Agent or Assignment. For example:
+Specs (specifications) gives you enhanced control over building your Session, Agent or Assignment. For example:
 
 ```
     import bluemarz as bm
@@ -62,18 +62,18 @@ Specs are textual descriptions in property-list format of the characteristics of
 * session_type: type of session, in this case an OpenAI thread
 * api_key: provider API KEY
 * prompt: Agent prompt
-* query: User message to Agent
+* query: User message to the Agent
 
-When creating an Assignment this way, a Session and Agent objects are built internally. 
-You can access these objects using Assignment properties.
+When creating an Assignment this way, a Session and Agent objects are built internally by Bluemarz. 
+You can access these objects using the Assignment properties.
 
 ## Tool execution
 
 Tools (aka Actions) extend the power of LLMs by providing access to external systems. 
-The call of a tool causes a break in the dialog, waiting for the User´s response. 
+The call of a tool causes a break in the dialog, and waits for the User´s response. 
 The image illustrates the sequence of events:
 
-(**need to be replaced by a similar picture**)
+(**Image is a Work in Progress**)
 ![rework](image_2.png)
 
 As can be seen, the LLM requests the execution of a tool, which is delegated to a Tool Executor component in Bluemarz. 
@@ -127,11 +127,11 @@ In this example, the Tool spec includes:
 
 * id: tool identifier, following provider´s conventions
 * name: tool name
-* description: tool description which will be used by LLM to decide what tool to call
+* description: tool description which will be used by the LLM to decide what tool to call
 * toolType: sync or async
 * variables: input variables
 
-A tool can be used following in an Agent activation as in:
+For example, a tool can be called following an Agent activation:
 
 ```
     async def tool_call_procedural_example():
@@ -153,11 +153,11 @@ A tool can be used following in an Agent activation as in:
         print(f"A:{res.last_run_result.messages[0].text}")
 ```
 
-It´s similar to previous example but, in this case, a tool has been added to the Assignment using the simple task.add_tools() method. Any number of tools can be added.
+It´s similar to the previous example but, in this case, a tool has been added to the Assignment using the simple task.add_tools() method. Any number of tools can be added.
 
 ## Tool execution with specs
 
-Instead of adding tools programatically as the above example, you can also add tool via spec. Check the following example:
+Instead of adding tools programatically as with the above example, you can also add tools via spec. Refer to the following example:
 
 ```
     async def tool_call_executor_example():
@@ -196,7 +196,7 @@ Instead of adding tools programatically as the above example, you can also add t
 
 This example is similar to the previous one but includes the tool definition as a spec, using the same attributes as the previous class example. This textual form allows alternatives, like using a ToolRepository, explained later.
 
-In this case, a ToolExecutor must be injected to allow the tool to be really executed. Note we´re exchanging the procedural flow (using task.add_tools() as previous example) by code injection (using annotation @bm.sync_tool_executor).
+In this case, a ToolExecutor must be injected to allow the tool to be really executed. Note we´re exchanging the procedural flow (using task.add_tools() as with the previous example, by code injection (using annotation @bm.sync_tool_executor).
 
 ```
     @bm.sync_tool_executor
@@ -217,7 +217,7 @@ In this case, a ToolExecutor must be injected to allow the tool to be really exe
 
 ## Adding files
 
-In this example, a file is added to the context window, expanding LLM´s knowledge.
+In this example, a file is added to the context window, expanding the LLM´s knowledge.
 
 ```
 async def file_usage_example():
@@ -234,14 +234,14 @@ async def file_usage_example():
 ```
 
 It´s the same basic example with the addition of a file. To add a file to a Session you need to:
-- create a SessionFile, specifying a URL from where to retrieve the file and a file_name to be used. Local files cannot be added in current version.
+- create a SessionFile, specifying a URL from where to retrieve the file and a file_name to be used. Local files cannot be added in the current version.
 - add the file to the Session by calling session.add_file() method.
 
 
 ## Using 2 Agents in a Session (sequencial agentic flow)
 
-In this example, 2 Agents are used in sequence, under the same Session.
-The example follows the same structure as in Basic Example.
+In this example, 2 Agents are used in sequence, within the same Session.
+The example follows the same structure as the Basic Example.
 
 ```
 async def many_agents_example():
@@ -263,5 +263,5 @@ async def many_agents_example():
     print(f"A:{res.last_run_result.messages[0].text}")
 ```
 
-The same basic example is initially used. Then, a new Agent (agent2) is retrieve and added to the Session. Next messages (task.add_message()) are sent to it.
+The same basic example is initially used. Then, a new Agent (agent2) is retrieved and added to the Session. Next, messages (task.add_message()) are sent to the Agent.
 
