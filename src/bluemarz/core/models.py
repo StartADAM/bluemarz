@@ -98,7 +98,7 @@ class MessageRole(str, Enum):
 class SessionMessage(CamelCaseModel):
     role: MessageRole
     text: str | None = Field(None, min_length=1)
-    files: list[SessionFile] | None = Field(None, min_length=1)
+    files: list[SessionFile] | None = None
 
 
 class AssignmentSpec(CamelCaseModel):
