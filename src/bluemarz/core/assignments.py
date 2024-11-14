@@ -222,7 +222,7 @@ async def _run_assignment_until_breakpoint(
                         last_run_result=assignment.last_result,
                     )
             else:
-                assignment.prepare_for_async_tool_calls()
+                assignment._prepare_for_async_tool_calls()
 
     return AssignmentRunResult(
         session_id=assignment.session.spec.id, last_run_result=assignment.last_result
