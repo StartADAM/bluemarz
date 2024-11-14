@@ -1,4 +1,5 @@
 import json
+import logging
 from time import sleep
 from typing import Self
 
@@ -354,27 +355,36 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
 
         result = None
         if run.status == "requires_action":
-            tool_calls: list[OpenAiToolCallSpec] = (
+            openai_tool_calls: list[OpenAiToolCallSpec] = (
                 run.required_action.submit_tool_outputs.tool_calls
             )
 
             tools_dict = {t.spec.name: t.spec for t in agent.tools}
 
-            for tc in tool_calls:
+            result_tool_calls: list[ToolCall] = []
+            for tc in openai_tool_calls:
                 if tc.function.name not in tools_dict:
-                    raise Exception("Agent tried to call unknown tool: ")
+                    logging.warning(f"Agent tried to call tool with no spec: {tc.function.name}")
+                    result_tool_calls.append(
+                        ToolCall(
+                            id=tc.id,
+                            tool=tools_dict[tc.function.name],
+                            arguments=json.loads(tc.function.arguments),
+                        )
+                    )
+                else:
+                    result_tool_calls.append(
+                        ToolCall(
+                            id=tc.id,
+                            tool_name=tc.function.name,
+                            arguments=json.loads(tc.function.arguments),
+                        )
+                    )
 
             result = RunResult(
                 run_id=run.id,
                 result_type=RunResultType.TOOL_CALL,
-                tool_calls=[
-                    ToolCall(
-                        id=tc.id,
-                        tool=tools_dict[tc.function.name],
-                        arguments=json.loads(tc.function.arguments),
-                    )
-                    for tc in tool_calls
-                ],
+                tool_calls=result_tool_calls,
             )
         elif run.status == "completed":
             messages = client.get_thread_messages(api_key, session.openai_thread.id)
