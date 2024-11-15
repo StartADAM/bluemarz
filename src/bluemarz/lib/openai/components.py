@@ -216,7 +216,7 @@ class OpenAiAssistantNativeSession(Session):
             #text += f"\nResult files: {str([file.file_name for file in tool_call_result.files])[1:-1]}"
             text += " "
 
-        message = SessionMessage(role=MessageRole.SYSTEM, text=text)
+        message = SessionMessage(role=MessageRole.USER, text=text)
 
         if tool_call_result.files:
             message.files = tool_call_result.files
