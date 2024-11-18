@@ -370,7 +370,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
                     result_tool_calls.append(
                         ToolCall(
                             id=tc.id,
-                            tool=tools_dict[tc.function.name],
+                            tool_name=tc.function.name,
                             arguments=json.loads(tc.function.arguments),
                         )
                     )
@@ -378,7 +378,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
                     result_tool_calls.append(
                         ToolCall(
                             id=tc.id,
-                            tool_name=tc.function.name,
+                            tool=tools_dict[tc.function.name],
                             arguments=json.loads(tc.function.arguments),
                         )
                     )
