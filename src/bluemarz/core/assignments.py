@@ -199,7 +199,7 @@ async def _run_assignment_until_breakpoint(
         done = True
 
         if result.result_type == RunResultType.TOOL_CALL:
-            if all([_tool_can_be_sync_called(tools_dict.get(tc.tool.name)) for tc in result.tool_calls]):
+            if all([tc.tool is not None and _tool_can_be_sync_called(tools_dict.get(tc.tool.name)) for tc in result.tool_calls]):
                 try:
                     # process all calls synchronously
                     async with asyncio.TaskGroup() as tg:
