@@ -1,7 +1,6 @@
 from typing import TypeVar
 
 import pydantic
-import requests
 
 from pydantic.alias_generators import to_camel
 
@@ -15,7 +14,7 @@ class CamelCaseModel(pydantic.BaseModel):
 __M = TypeVar("__M", bound=pydantic.BaseModel)
 
 
-def desserialize_response(response: requests.Response, cls: type[__M]) -> __M:
+def desserialize_response(response, cls: type[__M]) -> __M:
     return cls.model_validate(response.json())
 
 def to_json(cls: pydantic.BaseModel) -> str:
