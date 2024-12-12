@@ -1,9 +1,10 @@
 from http import HTTPMethod
 import logging
+import os
 from typing import Any
-import aiofiles
 
-import aiofiles.os
+import aiofile
+
 import httpx
 
 from bluemarz.core.models import SessionFile
@@ -328,9 +329,12 @@ async def upload_files(
         upload_files: list[models.OpenAiFileSpec] = []
         for file in files:
             try:
-                response = await file_client.get(str(file.url), timeout=30)
-                async with aiofiles.open(file.file_name, "wb") as f:
-                    await f.write(response.content)
+                async with file_client.stream(
+                    "GET", str(file.url), timeout=30
+                ) as stream:
+                    async with aiofile.async_open(file.file_name, "wb") as f:
+                        async for chunk in stream.aiter_bytes():
+                            await f.write(chunk)
             except Exception as ex:
                 logging.error(f"Error downloading file: {ex}")
                 continue
@@ -347,6 +351,6 @@ async def upload_files(
             except Exception as ex:
                 logging.error(f"Error in upload_files: {ex}")
 
-            await aiofiles.os.remove(file.file_name)
+            os.remove(file.file_name)
 
         return upload_files
