@@ -43,7 +43,7 @@ class Assignment:
     last_result: RunResult | None
     params: dict[str, Any]
 
-    def __init__(
+    async def __init__(
         self, agent: Agent, session: Session, run_id: str = None, **kwargs
     ) -> None:
         self.agent = agent
@@ -53,18 +53,18 @@ class Assignment:
         self.last_tools_submitted = []
         self.params = kwargs
 
-        self._validate_assignment()
+        await self._validate_assignment()
 
-    def _validate_assignment(self) -> None:
-        self.executor.validate_assignment(
+    async def _validate_assignment(self) -> None:
+        await self.executor.validate_assignment(
             self.agent, self.session, self.run_id, **self.params
         )
 
-    def add_message(self, message: SessionMessage) -> AddMessageResult:
-        return self.session.add_message(message)
+    async def add_message(self, message: SessionMessage) -> AddMessageResult:
+        return await self.session.add_message(message)
 
-    def add_file(self, file: SessionFile) -> AddFileResult:
-        return self.session.add_file(file)
+    async def add_file(self, file: SessionFile) -> AddFileResult:
+        return await self.session.add_file(file)
 
     def add_tools(self, tools: list[ToolImplementation]) -> None:
         self.agent.add_tools(tools)
@@ -77,7 +77,7 @@ class Assignment:
     "TODO: create test"
     async def run_once(self) -> RunResult:
         self.last_tools_submitted = []
-        result = self.executor.execute(
+        result = await self.executor.execute(
             self.agent, self.session, self.run_id, **self.params
         )
         self.last_result = result
@@ -85,23 +85,23 @@ class Assignment:
 
         return result
 
-    def submit_tool_calls(self, tool_call_results: list[ToolCallResult]) -> None:
+    async def submit_tool_calls(self, tool_call_results: list[ToolCallResult]) -> None:
         self.last_tools_submitted.extend(
             [tcr.tool_call.tool for tcr in tool_call_results]
         )
-        self.executor.submit_tool_calls(
+        await self.executor.submit_tool_calls(
             self.agent, self.session, self.run_id, tool_call_results, **self.params
         )
 
-    def _prepare_for_async_tool_calls(self) -> None:
-        self.executor.prepare_for_async_tool_calls(
+    async def _prepare_for_async_tool_calls(self) -> None:
+        await self.executor.prepare_for_async_tool_calls(
             self.agent, self.session, self.run_id, **self.params
         )
 
-    def add_tool_call_results(self, tool_call_results: list[ToolCallResult]) -> None:
+    async def add_tool_call_results(self, tool_call_results: list[ToolCallResult]) -> None:
         for result in tool_call_results:
             self.last_tools_submitted.append(result.tool_call.tool)
-            self.session.add_tool_call_result(result)
+            await self.session.add_tool_call_result(result)
 
     "TODO: create test"
     async def run_until_breakpoint(self) -> AssignmentRunResult:
@@ -110,13 +110,13 @@ class Assignment:
 
     "TODO: create test"
     @classmethod
-    def from_spec(cls, spec: AssignmentSpec) -> "Assignment":
-        return _create_assignment_from_spec(spec)
+    async def from_spec(cls, spec: AssignmentSpec) -> "Assignment":
+        return await _create_assignment_from_spec(spec)
 
 
-def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
-    agent = _get_agent(spec)
-    session = _get_session(spec)
+async def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
+    agent = await _get_agent(spec)
+    session = await _get_session(spec)
 
     if spec.query:
         session.add_message(SessionMessage(role=MessageRole.USER, text=spec.query))
@@ -128,17 +128,17 @@ def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
     return Assignment(agent, session, None, **spec.parameters)
 
 
-def _get_agent(spec: AssignmentSpec):
+async def _get_agent(spec: AssignmentSpec):
     spec.agent.parameters = _merge_parameters(spec.parameters, spec.agent.parameters)
     spec.agent.tools.extend(spec.additional_tools)
 
     for t in spec.agent.tools:
         t.parameters = _merge_parameters(spec.parameters, t.parameters)
 
-    return class_registry.get_agent_class(spec.agent.type).from_spec(spec.agent)
+    return await class_registry.get_agent_class(spec.agent.type).from_spec(spec.agent)
 
 
-def _get_session(spec: AssignmentSpec) -> Session:
+async def _get_session(spec: AssignmentSpec) -> Session:
     agent = spec.agent
     session = spec.session
     parameters = spec.parameters
@@ -158,7 +158,7 @@ def _get_session(spec: AssignmentSpec) -> Session:
         if not session.type:
             session.type = agent.session_type
 
-    return class_registry.get_session_class(session.type).from_spec(session)
+    return await class_registry.get_session_class(session.type).from_spec(session)
 
 
 def _merge_parameters(
@@ -208,7 +208,7 @@ async def _run_assignment_until_breakpoint(
                             for tc in result.tool_calls
                         ]
                     tc_results = [task.result() for task in tasks]
-                    assignment.submit_tool_calls(tc_results)
+                    await assignment.submit_tool_calls(tc_results)
 
                     # will run again after this
                     done = False
@@ -222,7 +222,7 @@ async def _run_assignment_until_breakpoint(
                         last_run_result=assignment.last_result,
                     )
             else:
-                assignment._prepare_for_async_tool_calls()
+                await assignment._prepare_for_async_tool_calls()
 
     return AssignmentRunResult(
         session_id=assignment.session.spec.id, last_run_result=assignment.last_result

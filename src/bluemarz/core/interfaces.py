@@ -14,28 +14,28 @@ class Session(ABC):
 
     @property
     @abstractmethod
-    def is_empty(self) -> bool:
+    async def is_empty(self) -> bool:
         pass
 
     @classmethod
     @abstractmethod
-    def from_spec(cls, spec: models.SessionSpec) -> "Session":
+    async def from_spec(cls, spec: models.SessionSpec) -> "Session":
         pass
 
     @abstractmethod
-    def add_file(self, file: models.SessionFile) -> models.AddFileResult:
+    async def add_file(self, file: models.SessionFile) -> models.AddFileResult:
         pass
 
     @abstractmethod
-    def add_message(self, message: models.SessionMessage) -> models.AddMessageResult:
+    async def add_message(self, message: models.SessionMessage) -> models.AddMessageResult:
         pass
 
     @abstractmethod
-    def delete_session(self) -> models.DeleteSessionResult:
+    async def delete_session(self) -> models.DeleteSessionResult:
         pass
 
     @abstractmethod
-    def add_tool_call_result(self, tool_call_result: models.ToolCallResult) -> models.AddMessageResult:
+    async def add_tool_call_result(self, tool_call_result: models.ToolCallResult) -> models.AddMessageResult:
         pass
 
 
@@ -111,7 +111,12 @@ class Agent(ABC):
 
     @classmethod
     @abstractmethod
-    def from_spec(cls, spec: models.AgentSpec) -> "Agent":
+    async def from_id(cls, id: str, api_key: str|None = None) -> "Agent":
+        pass
+
+    @classmethod
+    @abstractmethod
+    async def from_spec(cls, spec: models.AgentSpec) -> "Agent":
         pass
 
     @classmethod
@@ -143,21 +148,21 @@ class Agent(ABC):
 class AssignmentExecutor(ABC):
     @staticmethod
     @abstractmethod
-    def validate_assignment(
+    async def validate_assignment(
         agent: Agent, session: Session, run_id: str | None, **kwargs
     ) -> None:
         pass
         
     @staticmethod
     @abstractmethod
-    def execute(
+    async def execute(
         agent: Agent, session: Session, run_id: str | None, **kwargs
     ) -> models.RunResult:
         pass
 
     @staticmethod
     @abstractmethod
-    def submit_tool_calls(
+    async def submit_tool_calls(
         agent: Agent,
         session: Session,
         run_id: str,
@@ -168,7 +173,7 @@ class AssignmentExecutor(ABC):
 
     @staticmethod
     @abstractmethod
-    def prepare_for_async_tool_calls(
+    async def prepare_for_async_tool_calls(
         agent: Agent,
         session: Session,
         run_id: str,

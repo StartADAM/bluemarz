@@ -60,7 +60,7 @@ class OpenAiAssistant(Agent):
         return OpenAiAssistantTool
 
     @classmethod
-    def from_spec(cls, spec: AgentSpec) -> "OpenAiAssistant":
+    async def from_spec(cls, spec: AgentSpec) -> "OpenAiAssistant":
         if not spec.id:
             raise ValueError("spec must have id")
         if not spec.api_key:
@@ -68,7 +68,7 @@ class OpenAiAssistant(Agent):
         
         api_key: str = apply_api_key_middleware(spec.api_key)
         
-        impl = client.get_assistant(api_key, spec.id)
+        impl = await client.get_assistant(api_key, spec.id)
         if spec.tools:
             tools = [OpenAiAssistantTool.from_spec(t) for t in spec.tools]
         else:
@@ -77,11 +77,11 @@ class OpenAiAssistant(Agent):
         return cls(api_key, impl, spec, tools)
 
     @classmethod
-    def from_id(cls, api_key: str, assistant_id: str) -> "OpenAiAssistant":
-        if not api_key or not assistant_id:
+    async def from_id(cls, id: str, api_key: str) -> "OpenAiAssistant":
+        if not api_key or not id:
             raise ValueError("api_key and assistant_id are required")
 
-        impl: OpenAiThreadSpec = client.get_assistant(api_key, assistant_id)
+        impl: OpenAiThreadSpec = await client.get_assistant(api_key, id)
         return cls(api_key, impl, AgentSpec(id=impl.id, type="OpenAiAssistant", session_type="NativeSession"))
 
     @property
@@ -116,7 +116,7 @@ class OpenAiAssistantNativeSession(Session):
         super().__init__(spec)
 
     @classmethod
-    def from_spec(cls, spec: SessionSpec) -> "OpenAiAssistantNativeSession":
+    async def from_spec(cls, spec: SessionSpec) -> "OpenAiAssistantNativeSession":
         new_session: bool = not bool(spec.id)
 
         if not spec.api_key:
@@ -126,9 +126,9 @@ class OpenAiAssistantNativeSession(Session):
         
         impl: OpenAiThreadSpec = None
         if spec.id:
-            impl = client.get_session(api_key, spec.id)
+            impl = await client.get_session(api_key, spec.id)
         else:
-            impl = client.create_session(api_key)
+            impl = await client.create_session(api_key)
             spec.id = impl.id
 
         session = cls(api_key, impl, spec)
@@ -140,18 +140,18 @@ class OpenAiAssistantNativeSession(Session):
         return session
 
     @classmethod
-    def from_id(cls, api_key: str, thread_id: str) -> "OpenAiAssistantNativeSession":
-        if not api_key or not thread_id:
+    async def from_id(cls, id: str, api_key: str) -> "OpenAiAssistantNativeSession":
+        if not api_key or not id:
             raise ValueError("api_key and thread_id are required")
 
-        impl: OpenAiThreadSpec = client.get_session(api_key, thread_id)
+        impl: OpenAiThreadSpec = await client.get_session(api_key, id)
         return cls(
             api_key, impl, SessionSpec(id=impl.id, type="OpenAiAssistantNativeSession")
         )
 
     @classmethod
-    def new_session(cls, api_key: str) -> "OpenAiAssistantNativeSession":
-        impl: OpenAiThreadSpec = client.create_session(api_key)
+    async def new_session(cls, api_key: str) -> "OpenAiAssistantNativeSession":
+        impl: OpenAiThreadSpec = await client.create_session(api_key)
         return cls(
             api_key, impl, SessionSpec(id=impl.id, type="OpenAiAssistantNativeSession")
         )
@@ -168,25 +168,25 @@ class OpenAiAssistantNativeSession(Session):
     def files(self) -> list[SessionFile]:
         return self._files
 
-    def add_file(self, file: SessionFile) -> AddFileResult:
-        openai_file: OpenAiFileSpec = None
+    async def add_file(self, file: SessionFile) -> AddFileResult:
+        openai_files: list[OpenAiFileSpec] = None
 
         if file.id:
-            openai_files = client.get_files(self._api_key, [file.id])
+            openai_files = await client.get_files(self._api_key, [file.id])
         else:
-            openai_files = client.upload_files(self._api_key, [file])
+            openai_files = await client.upload_files(self._api_key, [file])
 
-        client.create_message(self._api_key, self._impl.id, "user", None, files = openai_files)
+        await client.create_message(self._api_key, self._impl.id, "user", None, files = openai_files)
 
         return AddMessageResult(ok=True)
 
-    def add_message(self, message: SessionMessage) -> AddMessageResult:
+    async def add_message(self, message: SessionMessage) -> AddMessageResult:
         role: str = "assistant"
         if message.role == MessageRole.USER:
             role = "user"
 
         if not message.files:
-            client.create_message(self._api_key, self._impl.id, role, message.text)
+            await client.create_message(self._api_key, self._impl.id, role, message.text)
         else:
             self._files.extend(message.files)
             files = []
@@ -194,18 +194,18 @@ class OpenAiAssistantNativeSession(Session):
             to_upload = [f for f in message.files if not f.id]
             to_get_ids = [f.id for f in message.files if f.id]
 
-            files.extend(client.upload_files(self._api_key, to_upload))
-            files.extend(client.get_files(self._api_key, to_get_ids))
+            files.extend(await client.upload_files(self._api_key, to_upload))
+            files.extend(await client.get_files(self._api_key, to_get_ids))
 
-            client.create_message(self._api_key, self._impl.id, role, message.text, files = files)
+            await client.create_message(self._api_key, self._impl.id, role, message.text, files = files)
 
         return AddMessageResult(ok=True)
 
-    def delete_session(self) -> DeleteSessionResult:
-        client.delete_session(self._api_key, self._impl.id)
+    async def delete_session(self) -> DeleteSessionResult:
+        await client.delete_session(self._api_key, self._impl.id)
         return DeleteSessionResult()
     
-    def add_tool_call_result(self, tool_call_result: ToolCallResult) -> AddMessageResult:
+    async def add_tool_call_result(self, tool_call_result: ToolCallResult) -> AddMessageResult:
         #text: str = f"Tool called: {tool_call_result.tool_call.tool.name} with arguments {tool_call_result.tool_call.arguments}"
         text: str = ""
 
@@ -221,11 +221,11 @@ class OpenAiAssistantNativeSession(Session):
         if tool_call_result.files:
             message.files = tool_call_result.files
 
-        self.add_message(message)
+        await self.add_message(message)
 
     @property
-    def is_empty(self):
-        return not bool(client.get_thread_messages(self._api_key, self._impl.id))
+    async def is_empty(self) -> bool:
+        return not bool(await client.get_thread_messages(self._api_key, self._impl.id))
 
 
 def _create_tool_parameters(parameter: ToolSpec.Variable) -> dict:
@@ -311,7 +311,7 @@ def _create_session_message_from_openai_thread_message(
 @assignment_executor
 class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
     @staticmethod
-    def validate_assignment(
+    async def validate_assignment(
         agent: OpenAiAssistant,
         session: OpenAiAssistantNativeSession,
         run_id: str | None = None,
@@ -324,12 +324,12 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
 
         if run_id:
             try:
-                client.get_run(agent.api_key, session.openai_thread.id, run_id)
+                await client.get_run(agent.api_key, session.openai_thread.id, run_id)
             except Exception:
                 raise InvalidDefinition(f"Could not get executor run with id {run_id}")
 
     @staticmethod
-    def execute(
+    async def execute(
         agent: OpenAiAssistant,
         session: OpenAiAssistantNativeSession,
         run_id: str | None = None,
@@ -338,14 +338,14 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
         api_key = agent.api_key
         run: OpenAiThreadRun = None
         if not run_id:
-            run = client.create_run(
+            run = await client.create_run(
                 api_key,
                 session.openai_thread,
                 agent.openai_assistant,
                 [t.openai_tool for t in agent.tools],
             )
         else:
-            run = client.get_run(api_key, session.openai_thread.id, run_id)
+            run = await client.get_run(api_key, session.openai_thread.id, run_id)
 
         while (
             run.status == "queued"
@@ -353,7 +353,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
             or run.status == "cancelling"
         ):
             sleep(1)
-            run = client.get_run(api_key, session.openai_thread.id, run.id)
+            run = await client.get_run(api_key, session.openai_thread.id, run.id)
 
         result = None
         if run.status == "requires_action":
@@ -389,7 +389,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
                 tool_calls=result_tool_calls,
             )
         elif run.status == "completed":
-            messages = client.get_thread_messages(api_key, session.openai_thread.id)
+            messages = await client.get_thread_messages(api_key, session.openai_thread.id)
 
             assistant_messages = []
             for message in messages:
@@ -415,7 +415,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
         return result
 
     @staticmethod
-    def submit_tool_calls(
+    async def submit_tool_calls(
         agent: OpenAiAssistant,
         session: OpenAiAssistantNativeSession,
         run_id: str,
@@ -424,7 +424,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
     ) -> RunResult:
         api_key = agent.api_key
 
-        client.submit_tool_output(
+        await client.submit_tool_output(
             api_key,
             session.openai_thread.id,
             run_id,
@@ -435,7 +435,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
         )
 
     @staticmethod
-    def prepare_for_async_tool_calls(
+    async def prepare_for_async_tool_calls(
         agent: OpenAiAssistant,
         session: OpenAiAssistantNativeSession,
         run_id: str,
@@ -443,7 +443,7 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
     ) -> RunResult:
         api_key = agent.api_key
 
-        client.cancel_run(api_key, session.openai_thread.id, run_id)
+        await client.cancel_run(api_key, session.openai_thread.id, run_id)
 
 
 def init():
