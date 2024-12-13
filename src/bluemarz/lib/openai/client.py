@@ -239,7 +239,7 @@ async def create_session(openai_key: str) -> models.OpenAiThreadSpec:
         response: httpx.Response = await _client.request(
             HTTPMethod.POST, path, params=params, headers=_get_auth_headers(openai_key)
         ).asend()
-        return _desserialize(response, models.ThreadRunStep)
+        return _desserialize(response, models.OpenAiThreadSpec)
     except Exception as ex:
         logging.error(f"Error in create_session: {ex}")
         raise
