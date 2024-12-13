@@ -42,6 +42,7 @@ from bluemarz.lib.openai.models import (
     ThreadMessageRole,
 )
 
+
 @ai_agent
 class OpenAiAssistant(Agent):
     def __init__(
@@ -65,9 +66,9 @@ class OpenAiAssistant(Agent):
             raise ValueError("spec must have id")
         if not spec.api_key:
             raise ValueError("spec must have api_key")
-        
+
         api_key: str = apply_api_key_middleware(spec.api_key)
-        
+
         impl = await client.get_assistant(api_key, spec.id)
         if spec.tools:
             tools = [OpenAiAssistantTool.from_spec(t) for t in spec.tools]
@@ -82,7 +83,11 @@ class OpenAiAssistant(Agent):
             raise ValueError("api_key and assistant_id are required")
 
         impl: OpenAiThreadSpec = await client.get_assistant(api_key, id)
-        return cls(api_key, impl, AgentSpec(id=impl.id, type="OpenAiAssistant", session_type="NativeSession"))
+        return cls(
+            api_key,
+            impl,
+            AgentSpec(id=impl.id, type="OpenAiAssistant", session_type="NativeSession"),
+        )
 
     @property
     def tools(self) -> list["OpenAiAssistantTool"]:
@@ -97,7 +102,9 @@ class OpenAiAssistant(Agent):
         return self._impl
 
     def _add_tools(self, tools: list[ToolDefinition]) -> Self:
-        self._tools.extend([OpenAiAssistantTool.from_definition(t.spec, t.executor) for t in tools])
+        self._tools.extend(
+            [OpenAiAssistantTool.from_definition(t.spec, t.executor) for t in tools]
+        )
         return self
 
 
@@ -121,9 +128,9 @@ class OpenAiAssistantNativeSession(Session):
 
         if not spec.api_key:
             raise ValueError("spec must have api_key")
-        
+
         api_key: str = apply_api_key_middleware(spec.api_key)
-        
+
         impl: OpenAiThreadSpec = None
         if spec.id:
             impl = await client.get_session(api_key, spec.id)
@@ -135,7 +142,7 @@ class OpenAiAssistantNativeSession(Session):
 
         if new_session and spec.messages:
             for message in spec.messages:
-                session.add_message(message)
+                await session.add_message(message)
 
         return session
 
@@ -176,7 +183,9 @@ class OpenAiAssistantNativeSession(Session):
         else:
             openai_files = await client.upload_files(self._api_key, [file])
 
-        await client.create_message(self._api_key, self._impl.id, "user", None, files = openai_files)
+        await client.create_message(
+            self._api_key, self._impl.id, "user", None, files=openai_files
+        )
 
         return AddMessageResult(ok=True)
 
@@ -186,7 +195,9 @@ class OpenAiAssistantNativeSession(Session):
             role = "user"
 
         if not message.files:
-            await client.create_message(self._api_key, self._impl.id, role, message.text)
+            await client.create_message(
+                self._api_key, self._impl.id, role, message.text
+            )
         else:
             self._files.extend(message.files)
             files = []
@@ -194,26 +205,33 @@ class OpenAiAssistantNativeSession(Session):
             to_upload = [f for f in message.files if not f.id]
             to_get_ids = [f.id for f in message.files if f.id]
 
-            files.extend(await client.upload_files(self._api_key, to_upload))
-            files.extend(await client.get_files(self._api_key, to_get_ids))
+            if to_upload:
+                files.extend(await client.upload_files(self._api_key, to_upload))
+                
+            if to_get_ids:
+                files.extend(await client.get_files(self._api_key, to_get_ids))
 
-            await client.create_message(self._api_key, self._impl.id, role, message.text, files = files)
+            await client.create_message(
+                self._api_key, self._impl.id, role, message.text, files=files
+            )
 
         return AddMessageResult(ok=True)
 
     async def delete_session(self) -> DeleteSessionResult:
         await client.delete_session(self._api_key, self._impl.id)
         return DeleteSessionResult()
-    
-    async def add_tool_call_result(self, tool_call_result: ToolCallResult) -> AddMessageResult:
-        #text: str = f"Tool called: {tool_call_result.tool_call.tool.name} with arguments {tool_call_result.tool_call.arguments}"
+
+    async def add_tool_call_result(
+        self, tool_call_result: ToolCallResult
+    ) -> AddMessageResult:
+        # text: str = f"Tool called: {tool_call_result.tool_call.tool.name} with arguments {tool_call_result.tool_call.arguments}"
         text: str = ""
 
         if tool_call_result.text:
             text += f"{tool_call_result.text}"
 
         if tool_call_result.files:
-            #text += f"\nResult files: {str([file.file_name for file in tool_call_result.files])[1:-1]}"
+            # text += f"\nResult files: {str([file.file_name for file in tool_call_result.files])[1:-1]}"
             text += " "
 
         message = SessionMessage(role=MessageRole.USER, text=text)
@@ -245,12 +263,19 @@ def _create_tool_parameters(parameter: ToolSpec.Variable) -> dict:
 
 
 class OpenAiAssistantTool(ToolDefinition):
-    def __init__(self, impl: OpenAiAssistantToolSpec, spec: ToolSpec, executor: ToolImplementation = None):
+    def __init__(
+        self,
+        impl: OpenAiAssistantToolSpec,
+        spec: ToolSpec,
+        executor: ToolImplementation = None,
+    ):
         self._impl = impl
         super().__init__(spec, executor)
 
     @classmethod
-    def from_definition(cls, spec: ToolSpec, executor: ToolImplementation = None) -> "OpenAiAssistantTool":
+    def from_definition(
+        cls, spec: ToolSpec, executor: ToolImplementation = None
+    ) -> "OpenAiAssistantTool":
         impl: OpenAiAssistantToolSpec = None
         if spec.variables:
             tool_properties = {
@@ -366,7 +391,9 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
             result_tool_calls: list[ToolCall] = []
             for tc in openai_tool_calls:
                 if tc.function.name not in tools_dict:
-                    logging.warning(f"Agent tried to call tool with no spec: {tc.function.name}")
+                    logging.warning(
+                        f"Agent tried to call tool with no spec: {tc.function.name}"
+                    )
                     result_tool_calls.append(
                         ToolCall(
                             id=tc.id,
@@ -389,14 +416,20 @@ class OpenAiAssistantAndThreadExecutor(AssignmentExecutor):
                 tool_calls=result_tool_calls,
             )
         elif run.status == "completed":
-            messages = await client.get_thread_messages(api_key, session.openai_thread.id)
+            messages = await client.get_thread_messages(
+                api_key, session.openai_thread.id
+            )
 
             assistant_messages = []
             for message in messages:
                 if message.role == ThreadMessageRole.USER:
                     break
 
-                if message.content and message.content[0].text and message.content[0].text.value.startswith("Tool called: "):
+                if (
+                    message.content
+                    and message.content[0].text
+                    and message.content[0].text.value.startswith("Tool called: ")
+                ):
                     break
 
                 assistant_messages.append(message)
