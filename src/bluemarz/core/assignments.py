@@ -43,7 +43,7 @@ class Assignment:
     last_result: RunResult | None
     params: dict[str, Any]
 
-    async def __init__(
+    def __init__(
         self, agent: Agent, session: Session, run_id: str = None, **kwargs
     ) -> None:
         self.agent = agent
@@ -52,8 +52,6 @@ class Assignment:
         self.executor = class_registry.get_executor(agent, session)
         self.last_tools_submitted = []
         self.params = kwargs
-
-        await self._validate_assignment()
 
     async def _validate_assignment(self) -> None:
         await self.executor.validate_assignment(
@@ -132,7 +130,9 @@ async def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
             SessionMessage(role=MessageRole.USER, text=agent.spec.default_query)
         )
 
-    return await Assignment(agent, session, None, **spec.parameters)
+    assignment = Assignment(agent, session, None, **spec.parameters)
+    await assignment._validate_assignment()
+    return assignment
 
 
 async def _get_agent(spec: AssignmentSpec):
