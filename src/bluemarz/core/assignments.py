@@ -75,6 +75,7 @@ class Assignment:
         self.agent.add_tools_from_spec(tools)
 
     "TODO: create test"
+
     async def run_once(self) -> RunResult:
         self.last_tools_submitted = []
         result = await self.executor.execute(
@@ -98,17 +99,21 @@ class Assignment:
             self.agent, self.session, self.run_id, **self.params
         )
 
-    async def add_tool_call_results(self, tool_call_results: list[ToolCallResult]) -> None:
+    async def add_tool_call_results(
+        self, tool_call_results: list[ToolCallResult]
+    ) -> None:
         for result in tool_call_results:
             self.last_tools_submitted.append(result.tool_call.tool)
             await self.session.add_tool_call_result(result)
 
     "TODO: create test"
+
     async def run_until_breakpoint(self) -> AssignmentRunResult:
         self.last_tools_submitted = []
         return await _run_assignment_until_breakpoint(self)
 
     "TODO: create test"
+
     @classmethod
     async def from_spec(cls, spec: AssignmentSpec) -> "Assignment":
         return await _create_assignment_from_spec(spec)
@@ -119,13 +124,15 @@ async def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
     session = await _get_session(spec)
 
     if spec.query:
-        session.add_message(SessionMessage(role=MessageRole.USER, text=spec.query))
+        await session.add_message(
+            SessionMessage(role=MessageRole.USER, text=spec.query)
+        )
     elif session.is_empty and agent.spec.default_query:
-        session.add_message(
+        await session.add_message(
             SessionMessage(role=MessageRole.USER, text=agent.spec.default_query)
         )
 
-    return Assignment(agent, session, None, **spec.parameters)
+    return await Assignment(agent, session, None, **spec.parameters)
 
 
 async def _get_agent(spec: AssignmentSpec):
@@ -176,12 +183,14 @@ def _merge_parameters(
 
 def _tool_can_be_sync_called(definition: ToolDefinition) -> bool:
     return definition.spec.tool_type == ToolType.SYNC and (
-            (definition.executor is not None and isinstance(definition.executor, SyncTool))
-            or class_registry.has_sync_tool_executor(definition.spec.name)
-        )
+        (definition.executor is not None and isinstance(definition.executor, SyncTool))
+        or class_registry.has_sync_tool_executor(definition.spec.name)
+    )
 
 
-async def _execute_sync_tool_call(toolCall: ToolCall, definition: ToolDefinition) -> ToolCallResult:
+async def _execute_sync_tool_call(
+    toolCall: ToolCall, definition: ToolDefinition
+) -> ToolCallResult:
     if definition.executor and isinstance(definition.executor, SyncTool):
         return definition.executor.call(toolCall)
 
@@ -199,12 +208,22 @@ async def _run_assignment_until_breakpoint(
         done = True
 
         if result.result_type == RunResultType.TOOL_CALL:
-            if all([tc.tool is not None and _tool_can_be_sync_called(tools_dict.get(tc.tool.name)) for tc in result.tool_calls]):
+            if all(
+                [
+                    tc.tool is not None
+                    and _tool_can_be_sync_called(tools_dict.get(tc.tool.name))
+                    for tc in result.tool_calls
+                ]
+            ):
                 try:
                     # process all calls synchronously
                     async with asyncio.TaskGroup() as tg:
                         tasks = [
-                            tg.create_task(_execute_sync_tool_call(tc, tools_dict.get(tc.tool.name)))
+                            tg.create_task(
+                                _execute_sync_tool_call(
+                                    tc, tools_dict.get(tc.tool.name)
+                                )
+                            )
                             for tc in result.tool_calls
                         ]
                     tc_results = [task.result() for task in tasks]
