@@ -14,7 +14,7 @@ from bluemarz.utils.model_utils import to_dict as _to_dict
 
 from bluemarz.utils.http_client import HTTPClient
 
-BASE_URL: str = "https://api.openai.com/v1/"
+BASE_URL: str = "https://api.openai.com/v1"
 BASE_HEADERS: dict[str, Any] = {"OpenAI-Beta": "assistants=v2"}
 
 _client: HTTPClient = HTTPClient(BASE_URL, headers=BASE_HEADERS)
