@@ -115,11 +115,13 @@ class OpenAiAssistantNativeSession(Session):
         api_key: str,
         impl: OpenAiThreadSpec,
         spec: SessionSpec,
+        is_empty: bool = False,
         files: list[SessionFile] = [],
     ):
         self._api_key = api_key
         self._impl = impl
         self._files = files
+        self._is_empty = is_empty
         super().__init__(spec)
 
     @classmethod
@@ -131,14 +133,16 @@ class OpenAiAssistantNativeSession(Session):
 
         api_key: str = apply_api_key_middleware(spec.api_key)
 
+        is_empty: bool = True
         impl: OpenAiThreadSpec = None
         if spec.id:
             impl = await client.get_session(api_key, spec.id)
+            is_empty = await check_if_empty_session(api_key, spec.id)
         else:
             impl = await client.create_session(api_key)
             spec.id = impl.id
 
-        session = cls(api_key, impl, spec)
+        session = cls(api_key, impl, spec, is_empty=is_empty)
 
         if new_session and spec.messages:
             for message in spec.messages:
@@ -175,6 +179,10 @@ class OpenAiAssistantNativeSession(Session):
     def files(self) -> list[SessionFile]:
         return self._files
 
+    @property
+    async def is_empty(self) -> bool:
+        return self._is_empty
+
     async def add_file(self, file: SessionFile) -> AddFileResult:
         openai_files: list[OpenAiFileSpec] = None
 
@@ -186,6 +194,9 @@ class OpenAiAssistantNativeSession(Session):
         await client.create_message(
             self._api_key, self._impl.id, "user", None, files=openai_files
         )
+
+        if self.is_empty:
+            self._is_empty = False
 
         return AddMessageResult(ok=True)
 
@@ -207,14 +218,15 @@ class OpenAiAssistantNativeSession(Session):
 
             if to_upload:
                 files.extend(await client.upload_files(self._api_key, to_upload))
-                
+
             if to_get_ids:
                 files.extend(await client.get_files(self._api_key, to_get_ids))
 
             await client.create_message(
                 self._api_key, self._impl.id, role, message.text, files=files
             )
-
+        if self.is_empty:
+            self._is_empty = False
         return AddMessageResult(ok=True)
 
     async def delete_session(self) -> DeleteSessionResult:
@@ -241,9 +253,9 @@ class OpenAiAssistantNativeSession(Session):
 
         await self.add_message(message)
 
-    @property
-    async def is_empty(self) -> bool:
-        return not bool(await client.get_thread_messages(self._api_key, self._impl.id))
+
+async def check_if_empty_session(api_key: str, session_id: str) -> bool:
+    return not bool(await client.get_thread_messages(api_key, session_id))
 
 
 def _create_tool_parameters(parameter: ToolSpec.Variable) -> dict:

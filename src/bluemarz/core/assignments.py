@@ -44,7 +44,7 @@ class Assignment:
     params: dict[str, Any]
 
     def __init__(
-        self, agent: Agent, session: Session, run_id: str = None, **kwargs
+        self, agent: Agent, session: Session, run_id: str | None = None, **kwargs
     ) -> None:
         self.agent = agent
         self.session = session
@@ -125,7 +125,7 @@ async def _create_assignment_from_spec(spec: AssignmentSpec) -> Assignment:
         await session.add_message(
             SessionMessage(role=MessageRole.USER, text=spec.query)
         )
-    elif session.is_empty and agent.spec.default_query:
+    elif await session.is_empty and agent.spec.default_query:
         await session.add_message(
             SessionMessage(role=MessageRole.USER, text=agent.spec.default_query)
         )
