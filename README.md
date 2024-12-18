@@ -28,7 +28,7 @@ The following code uses the 3 main concepts in Bluemarz:
 - Session, where the dialog User-Agent happens;
 - Assignment of an Agent to a Session to be used in a dialog.
 
-```
+```python
 import bluemarz as bm
 import asyncio
 async def procedural_example():

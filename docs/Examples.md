@@ -4,7 +4,7 @@
 
 This is the same example as shown in the Overview section.
 
-```
+```python
     import bluemarz as bm
     import asyncio
     
@@ -38,7 +38,7 @@ Following the comments, you can see Bluemarz concepts being used:
 
 Specs (specifications) gives you enhanced control over building your Session, Agent or Assignment. For example:
 
-```
+```python
     import bluemarz as bm
     async def from_spec_example():
         msg= "What can you do?"
@@ -85,7 +85,7 @@ Async tool calling is an important Bluemarz addition since frequently in high pe
 
 You can define a Tool from its spec:
 
-```
+```python
     class Tool(bm.SyncTool):
         def __init__(self):
                 self._spec = bm.ToolSpec.model_validate(
@@ -136,7 +136,7 @@ In this example, the Tool spec includes:
 
 For example, a tool can be called following an Agent activation:
 
-```
+```python
     async def tool_call_procedural_example():
         msg="Please convert 32 degress celsius to kelvin using the convert_celsius_temperature tool"
         spec = bm.AssignmentSpec(
@@ -162,7 +162,7 @@ It´s similar to the previous example but, in this case, a tool has been added t
 
 Instead of adding tools programatically as with the above example, you can also add tools via spec. Refer to the following example:
 
-```
+```python
     async def tool_call_executor_example():
         msg = "Please convert 32 degress celsius to kelvin using the convert_celsius_temperature tool"
         spec = bm.AssignmentSpec.model_validate(
@@ -201,7 +201,7 @@ This example is similar to the previous one but includes the tool definition as 
 
 In this case, a ToolExecutor must be injected to allow the tool to be really executed. Note we´re exchanging the procedural flow (using task.add_tools() as with the previous example, by code injection (using annotation @bm.sync_tool_executor).
 
-```
+```pythonthon
     @bm.sync_tool_executor
     class KelvinCelsiusTool(bm.SyncToolExecutor):
         @classmethod
@@ -222,7 +222,7 @@ In this case, a ToolExecutor must be injected to allow the tool to be really exe
 
 In this example, a file is added to the context window, expanding the LLM´s knowledge.
 
-```
+```python
 async def file_usage_example():
     msg = "What´s Bluemarz?"
     agent = await bm.openai.OpenAiAssistant.from_id(oai_api_key, assistant_id)
@@ -246,7 +246,7 @@ It´s the same basic example with the addition of a file. To add a file to a Ses
 In this example, 2 Agents are used in sequence, within the same Session.
 The example follows the same structure as the Basic Example.
 
-```
+```python
 async def many_agents_example():
     msg1 = "What´s Bluemarz?"
     agent1 = await bm.openai.OpenAiAssistant.from_id(oai_api_key, assistant_id)
