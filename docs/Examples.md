@@ -7,21 +7,24 @@ This is the same example as shown in the Overview section.
 ```
     import bluemarz as bm
     import asyncio
+    
     async def procedural_example():
         # retrieve an Agent from OpenAI
-        agent = bm.openai.OpenAiAssistant.from_id(api_key, assistant_id)
+        agent = await bm.openai.OpenAiAssistant.from_id(api_key, assistant_id)
         # create a Session (i.e. a thread in OpenAI terms)
-        session = bm.openai.OpenAiAssistantNativeSession.new_session(api_key)
+        session = await bm.openai.OpenAiAssistantNativeSession.new_session(api_key)
         #create an Assignment, to assign an agent to a session
         task = bm.Assignment(agent, session)
         #send a message to the agent
         msg="What can you do?"
-        task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg)
+        await task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg))
         # run the agent
         res = await task.run_until_breakpoint()
         # print results
         print(f"Q:{msg}")
-        print(f"A:{res.last_run_result.messages[0].text}")asyncio.run(procedural_example())
+        print(f"A:{res.last_run_result.messages[0].text}")
+    
+    asyncio.run(procedural_example())
 ```
 
 Following the comments, you can see Bluemarz concepts being used:
@@ -49,7 +52,7 @@ Specs (specifications) gives you enhanced control over building your Session, Ag
             ),
             query=msg,
         )
-        task = bm.Assignment.from_spec(spec)
+        task = await bm.Assignment.from_spec(spec)
         res = await task.run_until_breakpoint()
         print(f"Q:{msg}")
         print(f"A:{res.last_run_result.messages[0].text}")
@@ -146,7 +149,7 @@ For example, a tool can be called following an Agent activation:
             ),
             query=msg,
         )
-        task = bm.Assignment.from_spec(spec)
+        task = await bm.Assignment.from_spec(spec)
         task.add_tools([Tool()])
         res = await task.run_until_breakpoint()
         print(f"Q:{msg}")
@@ -188,7 +191,7 @@ Instead of adding tools programatically as with the above example, you can also 
                 "query": msg,
             }
         )
-        task = bm.Assignment.from_spec(spec)
+        task = await bm.Assignment.from_spec(spec)
         res = await task.run_until_breakpoint()
         print(f"Q:{msg}")
         print(f"A:{res.last_run_result.messages[0].text}")
@@ -222,12 +225,12 @@ In this example, a file is added to the context window, expanding the LLM´s kno
 ```
 async def file_usage_example():
     msg = "What´s Bluemarz?"
-    agent = bm.openai.OpenAiAssistant.from_id(oai_api_key, assistant_id)
-    session = bm.openai.OpenAiAssistantNativeSession.new_session(oai_api_key)
+    agent = await bm.openai.OpenAiAssistant.from_id(oai_api_key, assistant_id)
+    session = await bm.openai.OpenAiAssistantNativeSession.new_session(oai_api_key)
     task = bm.Assignment(agent, session)
     a_file = bm.SessionFile(url="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", file_name="dummy.pdf")
-    session.add_file(a_file)
-    task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg))
+    await session.add_file(a_file)
+    await task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg))
     res = await task.run_until_breakpoint()
     print(f"Q:{msg}")
     print(f"A:{res.last_run_result.messages[0].text}")
@@ -246,18 +249,18 @@ The example follows the same structure as the Basic Example.
 ```
 async def many_agents_example():
     msg1 = "What´s Bluemarz?"
-    agent1 = bm.openai.OpenAiAssistant.from_id(oai_api_key, assistant_id)
-    session = bm.openai.OpenAiAssistantNativeSession.new_session(oai_api_key)
+    agent1 = await bm.openai.OpenAiAssistant.from_id(oai_api_key, assistant_id)
+    session = await bm.openai.OpenAiAssistantNativeSession.new_session(oai_api_key)
     task = bm.Assignment(agent1, session)
-    task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg1))
+    await task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg1))
     res = await task.run_until_breakpoint()
     print(f"Q:{msg1}")
     print(f"A:{res.last_run_result.messages[0].text}")
 
     msg2 = "What was the first question?"
-    agent2 = bm.openai.OpenAiAssistant.from_id(oai_api_key, second_assistant_id)
+    agent2 = await bm.openai.OpenAiAssistant.from_id(oai_api_key, second_assistant_id)
     task = bm.Assignment(agent2, session)
-    task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg2))
+    await task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text=msg2))
     res = await task.run_until_breakpoint()
     print(f"Q:{msg2}")
     print(f"A:{res.last_run_result.messages[0].text}")

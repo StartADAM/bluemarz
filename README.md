@@ -33,13 +33,13 @@ import bluemarz as bm
 import asyncio
 async def procedural_example():
     # retrieve an Agent from OpenAI
-    agent = bm.openai.OpenAiAssistant.from_id(api_key, assistant_id)
+    agent = await bm.openai.OpenAiAssistant.from_id(api_key, assistant_id)
     # create a Session (i.e. a thread in OpenAI terms)
-    session = bm.openai.OpenAiAssistantNativeSession.new_session(api_key)
+    session = await bm.openai.OpenAiAssistantNativeSession.new_session(api_key)
     #create an Assignment, to assign an agent to a session
     task = bm.Assignment(agent, session)
     #send a message to the agent
-    task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text="What can you do?"))
+    await task.add_message(bm.SessionMessage(role=bm.MessageRole.USER, text="What can you do?"))
     # run the agent
     res = await task.run_until_breakpoint()
     # print results
